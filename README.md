@@ -4,7 +4,7 @@
 
 I built this while preparing for data analyst interviews. Most SQL practice sites either lock the good questions behind a paywall or make you read solutions without ever typing anything. I wanted something where I could actually write every query against real tables, get told whether my result set matches, and keep my progress between sessions. So I made it, and I figured other people prepping for the same kind of interviews might get some use out of it.
 
-Live version: https://ebiiisharifi.github.io/sql-practice-lab/
+Live version: https://ebiisharifi.github.io/sql-practice-lab/
 
 Or just download index.html and open it. That is the whole app.
 
