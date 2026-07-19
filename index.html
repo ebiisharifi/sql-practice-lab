@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Practice Lab - 156 runnable questions in your browser</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#0f5757; --teal-dark:#0a3d3d; --teal-soft:#d8e8e6; --teal-mist:#eef4f3;
+  --bg:#fbfaf7; --ink:#1a1f24; --grey:#5a6570; --line:#e3e0d8;
+  --card:#ffffff; --ok:#1e7a4f; --ok-bg:#e8f4ec; --err:#a3341f; --err-bg:#faece8;
+  --console:#132020; --console-txt:#cfe4df; --gold:#b98a2f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+::selection{background:var(--teal-soft)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+
+/* header */
+header{background:var(--teal);color:#fff;padding:18px 0 0}
+.head-row{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:24px;letter-spacing:.2px}
+h1 span{color:#9ec8c2;font-weight:600}
+.progress-pill{font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 12px;border-radius:999px}
+nav{display:flex;gap:2px;margin-top:14px}
+nav button{background:transparent;border:none;color:#c8dedb;font-weight:600;font-size:14px;padding:10px 18px;border-radius:10px 10px 0 0;transition:background .15s}
+nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+nav button.active{background:var(--bg);color:var(--teal-dark)}
+nav button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+
+main{padding:22px 0 60px}
+.tab{display:none}
+.tab.active{display:block}
+
+/* practice layout */
+.practice-grid{display:grid;grid-template-columns:290px 1fr;gap:22px;align-items:start}
+@media(max-width:900px){.practice-grid{grid-template-columns:1fr}}
+.qlist{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;max-height:78vh;overflow-y:auto}
+.topic-h{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);background:var(--teal-mist);padding:8px 14px;border-top:1px solid var(--line)}
+.qlist .topic-h:first-child{border-top:none}
+.qbtn{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;border-top:1px solid #f1efe9;padding:9px 14px;font-size:13.5px;color:var(--ink)}
+.qbtn:hover{background:#f6f4ee}
+.qbtn.sel{background:var(--teal-soft)}
+.qbtn .dot{width:16px;height:16px;flex:none;border-radius:50%;border:1.6px solid #c4cdc9;font-size:10px;display:flex;align-items:center;justify-content:center;color:#fff}
+.qbtn.done .dot{background:var(--ok);border-color:var(--ok)}
+.qbtn.done .dot::after{content:'\2713'}
+.newtag{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:600;letter-spacing:.08em;background:var(--gold);color:#241a05;border-radius:4px;padding:1px 5px;margin-left:auto;flex:none}
+
+.workarea{min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+.q-eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.q-title{font-family:'Fraunces',serif;font-size:21px;font-weight:700;color:var(--teal-dark);margin-bottom:8px}
+.q-prompt{color:#333a41}
+.q-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--teal-mist);padding:1px 5px;border-radius:4px}
+.hintbox{display:none;margin-top:12px;background:#fdf7ea;border:1px solid #ecd9a8;border-radius:10px;padding:10px 14px;font-size:13.5px}
+.hintbox.show{display:block}
+.solbox{display:none;margin-top:12px}
+.solbox.show{display:block}
+.solhead{display:flex;align-items:center;justify-content:space-between;background:var(--teal);color:#fff;border-radius:10px 10px 0 0;padding:6px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.copybtn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:4px 10px;font-size:11.5px;font-weight:600;font-family:'Manrope',sans-serif;text-transform:none;letter-spacing:0}
+.copybtn:hover{background:rgba(255,255,255,.24)}
+.copybtn.copied{background:#2bb389;border-color:#2bb389;color:#06231c}
+.solbox pre{background:var(--teal-mist);border:1px solid var(--teal-soft);border-top:none;border-radius:0 0 10px 10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow-x:auto;white-space:pre;margin:0}
+
+/* editor / console */
+.editor-card{padding:0;overflow:hidden}
+.editor-top{display:flex;align-items:center;justify-content:space-between;background:var(--console);padding:8px 14px}
+.editor-top .lbl{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7ba39c;letter-spacing:.1em}
+.editor-top .kbd{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#5d817b}
+textarea.sql{width:100%;min-height:150px;border:none;resize:vertical;background:var(--console);color:var(--console-txt);font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.6;padding:6px 16px 14px;caret-color:#7fd4c1}
+textarea.sql:focus{outline:none}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;background:#0e1a1a;border-top:1px solid #1f3230}
+.btn{border:none;border-radius:9px;font-weight:600;font-size:13.5px;padding:8px 16px;transition:transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.btn-run{background:#2bb389;color:#06231c}
+.btn-run:hover{background:#35c497}
+.btn-check{background:var(--gold);color:#241a05}
+.btn-check:hover{background:#caa04a}
+.btn-ghost{background:transparent;color:#9dc3bc;border:1px solid #2c4643}
+.btn-ghost:hover{background:#1a2c2a}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-teal:hover{background:#137070}
+
+/* output */
+.out{margin-top:16px}
+.mysql-line{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--grey);margin-bottom:8px}
+.errbox{background:var(--err-bg);border:1px solid #e4b7ab;border-left:4px solid var(--err);border-radius:8px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--err);white-space:pre-wrap}
+.okbox{background:var(--ok-bg);border:1px solid #b5d9c3;border-left:4px solid var(--ok);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--ok);font-weight:600}
+.warnbox{background:#fdf7ea;border:1px solid #ecd9a8;border-left:4px solid var(--gold);border-radius:8px;padding:12px 14px;font-size:13.5px;color:#6b5312}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:10px}
+table.res{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
+table.res th{font-family:'JetBrains Mono',monospace;font-size:11.5px;text-align:left;background:var(--teal);color:#fff;padding:7px 12px;position:sticky;top:0}
+table.res td{padding:6px 12px;border-top:1px solid #f0ede6;font-family:'JetBrains Mono',monospace;font-size:12.5px}
+table.res tr:nth-child(even) td{background:#faf9f5}
+td.nullv{color:#b0aa9c;font-style:italic}
+
+/* database tab */
+.db-grid{display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:start}
+@media(max-width:800px){.db-grid{grid-template-columns:1fr}}
+.tbl-list button{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink)}
+.tbl-list button:hover{border-color:var(--teal)}
+.tbl-list button.sel{background:var(--teal);color:#fff;border-color:var(--teal)}
+.tbl-list .cnt{float:right;color:inherit;opacity:.6;font-size:11px}
+.schema-pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--teal-mist);border:1px solid var(--teal-soft);border-radius:6px;padding:3px 8px;margin:0 6px 6px 0}
+.schema-pill b{color:var(--teal)}
+
+/* cheat sheet */
+.cheat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.cheat h3{font-family:'Fraunces',serif;font-size:16px;color:var(--teal-dark);margin-bottom:8px}
+.cheat pre{background:var(--console);color:var(--console-txt);border-radius:10px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:12px;overflow-x:auto;line-height:1.55}
+.cheat p{font-size:13px;color:var(--grey);margin-bottom:8px}
+
+.loading{padding:60px;text-align:center;color:var(--grey);font-family:'JetBrains Mono',monospace}
+footer{border-top:1px solid var(--line);padding:14px 0;color:var(--grey);font-size:12px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="head-row">
+      <h1>SQL Practice Lab <span>/ 156 runnable interview questions</span></h1>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="saveDot" style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#9ec8c2;opacity:.45;transition:opacity .3s">saved</span>
+        <div class="progress-pill" id="progressPill">0 / 0 solved</div>
+        <button onclick="resetProgress()" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#c8dedb;font-size:11px;border-radius:999px;padding:5px 11px">Reset</button>
+      </div>
+    </div>
+    <nav>
+      <button class="active" data-tab="practice">Practice</button>
+      <button data-tab="sandbox">Sandbox</button>
+      <button data-tab="database">Database</button>
+      <button data-tab="cheat">Cheat sheet</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="loading" class="loading">Loading SQL engine...</div>
+
+  <!-- PRACTICE -->
+  <section class="tab" id="tab-practice">
+    <div class="practice-grid">
+      <div style="min-width:0">
+        <input id="qSearch" type="text" placeholder="Search 156 questions..." style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:8px;font-family:'Manrope',sans-serif;font-size:13px;background:#fff">
+        <aside class="qlist" id="qlist"></aside>
+      </div>
+      <div class="workarea">
+        <div class="card">
+          <div class="q-eyebrow" id="qTopic"></div>
+          <div class="q-title" id="qTitle"></div>
+          <div class="q-prompt" id="qPrompt"></div>
+          <div class="hintbox" id="hintBox"></div>
+          <div class="solbox" id="solBox">
+            <div class="solhead"><span>Solution</span><button class="copybtn" id="copySol" title="Copy solution to clipboard"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="copySolTxt">Copy</span></button></div>
+            <pre id="solPre"></pre>
+          </div>
+        </div>
+        <div class="card editor-card">
+          <div class="editor-top"><span class="lbl">mysql&gt; write your query</span><span class="kbd">Ctrl+Enter to run</span></div>
+          <textarea class="sql" id="pEditor" spellcheck="false" placeholder="SELECT ..."></textarea>
+          <div class="btnrow">
+            <button class="btn btn-run" id="pRun">Run query</button>
+            <button class="btn btn-check" id="pCheck">Check answer</button>
+            <button class="btn btn-ghost" id="pHint">Hint</button>
+            <button class="btn btn-ghost" id="pSol">Show solution</button>
+            <button class="btn btn-ghost" id="pClear">Clear</button>
+          </div>
+        </div>
+        <div class="out" id="pOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SANDBOX -->
+  <section class="tab" id="tab-sandbox">
+    <div class="card">
+      <div class="q-title">Free sandbox</div>
+      <div class="q-prompt">Run anything against the full database. Try the chips below, or experiment freely - errors come back MySQL-style so you can practice reading them.</div>
+      <div style="margin-top:10px">
+        <button class="btn btn-teal" style="margin:0 6px 6px 0" data-chip="SELECT * FROM customers;">customers</button>
+        <button class="btn btn-teal" style="margin:0 6px 6px 0" data-chip="SELECT product_type, COUNT(*) AS n FROM accounts GROUP BY product_type;">group by</button>
+        <button class="btn btn-teal" style="margin:0 6px 6px 0" data-chip="SELECT c.name, SUM(t.amount) AS spend&#10;FROM customers c&#10;JOIN accounts a ON a.customer_id = c.customer_id&#10;JOIN transactions t ON t.account_id = a.account_id&#10;GROUP BY c.customer_id, c.name&#10;ORDER BY spend DESC;">3-table join</button>
+        <button class="btn btn-teal" style="margin:0 6px 6px 0" data-chip="SELECT payment_date, SUM(amount) AS cash&#10;FROM payments WHERE method = 'cash'&#10;GROUP BY payment_date ORDER BY payment_date;">payments</button>
+      </div>
+    </div>
+    <div class="card editor-card">
+      <div class="editor-top"><span class="lbl">mysql&gt; sandbox</span><span class="kbd">Ctrl+Enter to run</span></div>
+      <textarea class="sql" id="sEditor" spellcheck="false" placeholder="SELECT * FROM customers;"></textarea>
+      <div class="btnrow">
+        <button class="btn btn-run" id="sRun">Run query</button>
+        <button class="btn btn-ghost" id="sClear">Clear</button>
+      </div>
+    </div>
+    <div class="out" id="sOut"></div>
+  </section>
+
+  <!-- DATABASE -->
+  <section class="tab" id="tab-database">
+    <div class="db-grid">
+      <div class="tbl-list" id="tblList"></div>
+      <div>
+        <div class="card">
+          <div class="q-title" id="dbTitle">Tables</div>
+          <div id="dbSchema" style="margin:8px 0 4px"></div>
+          <div class="mysql-line" id="dbCount"></div>
+        </div>
+        <div class="tblwrap" id="dbRows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section class="tab" id="tab-cheat">
+    <div class="cheat-grid" id="cheatGrid"></div>
+  </section>
+</main>
+
+<footer><div class="wrap">Engine: SQLite (WASM) with a MySQL compatibility layer (YEAR, MONTH, DATE_FORMAT, DATEDIFF, DATE_ADD/DATE_SUB with INTERVAL, CURDATE and more). Behavior matches MySQL for everything in this question set; notes flag the rare differences. Your answers and solved checkmarks save automatically as you work.</div></footer>
+
+<script>
+/* ---------- state ---------- */
+let db, solved = new Set(), currentQ = 0, answers = {}, reviewed = new Set();
+const STATE_KEY = 'sql-practice-state';
+
+/* Dual-layer storage adapter: Claude artifact storage -> browser localStorage -> memory */
+const store = {
+  mode: 'memory',
+  init(){
+    try{
+      if (window.storage && typeof window.storage.get === 'function'){ this.mode = 'claude'; return; }
+    }catch(e){}
+    try{
+      const t = '__probe__' + Date.now();
+      window.localStorage.setItem(t, '1'); window.localStorage.removeItem(t);
+      this.mode = 'local';
+    }catch(e){ this.mode = 'memory'; }
+  },
+  async load(){
+    try{
+      if (this.mode === 'claude'){
+        const r = await window.storage.get(STATE_KEY);
+        return r && r.value ? JSON.parse(r.value) : null;
+      }
+      if (this.mode === 'local'){
+        const r = window.localStorage.getItem(STATE_KEY);
+        return r ? JSON.parse(r) : null;
+      }
+    }catch(e){ /* missing key or parse issue: start fresh */ }
+    return null;
+  },
+  async save(obj){
+    const payload = JSON.stringify(obj);
+    if (this.mode === 'claude'){ await window.storage.set(STATE_KEY, payload); return; }
+    if (this.mode === 'local'){ window.localStorage.setItem(STATE_KEY, payload); return; }
+    throw new Error('memory-only');
+  },
+  async clear(){
+    try{
+      if (this.mode === 'claude') await window.storage.delete(STATE_KEY);
+      else if (this.mode === 'local') window.localStorage.removeItem(STATE_KEY);
+    }catch(e){}
+  },
+  label(){ return this.mode === 'claude' ? 'saved' : this.mode === 'local' ? 'saved on this device' : 'session only'; }
+};
+
+async function loadState(){
+  store.init();
+  const st = await store.load();
+  if (st){ solved = new Set(st.solved || []); answers = st.answers || {}; reviewed = new Set(st.reviewed || []); }
+  const el = $('saveDot');
+  if (el){ el.textContent = store.label(); el.style.opacity = store.mode === 'memory' ? '.9' : '.45'; }
+}
+let saveTimer = null;
+function persistNow(){
+  store.save({solved:[...solved], answers, reviewed:[...reviewed]}).then(()=>{
+    const el = $('saveDot');
+    if (el){ el.textContent = store.label(); el.style.opacity = '1'; setTimeout(()=>el.style.opacity='.45', 900); }
+  }).catch(()=>{
+    const el = $('saveDot');
+    if (el){ el.textContent = 'session only'; el.style.opacity = '.9'; }
+  });
+}
+function saveState(immediate){
+  if (immediate){ clearTimeout(saveTimer); persistNow(); return; }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistNow, 250);
+}
+async function resetProgress(){
+  if(!confirm('Reset all progress and saved answers?')) return;
+  solved = new Set(); answers = {}; reviewed = new Set();
+  await store.clear();
+  selectQ(0);
+}
+/* flush any pending debounced save if the tab closes */
+window.addEventListener('beforeunload', ()=>{ if(saveTimer){ clearTimeout(saveTimer); try{ if(store.mode==='local') window.localStorage.setItem(STATE_KEY, JSON.stringify({solved:[...solved], answers, reviewed:[...reviewed]})); }catch(e){} } });
+
+/* ---------- seed data ---------- */
+function seedDatabase(SQL){
+  db = new SQL.Database();
+  db.run(`
+  CREATE TABLE customers(customer_id INTEGER PRIMARY KEY, name TEXT, city TEXT, signup_date TEXT, credit_score INTEGER);
+  CREATE TABLE accounts(account_id INTEGER PRIMARY KEY, customer_id INTEGER, product_type TEXT, open_date TEXT, credit_limit INTEGER, status TEXT);
+  CREATE TABLE transactions(transaction_id INTEGER PRIMARY KEY, account_id INTEGER, transaction_date TEXT, amount REAL, merchant_category TEXT);
+  CREATE TABLE payments(payment_id INTEGER PRIMARY KEY, customer_id INTEGER, payment_date TEXT, amount REAL, method TEXT);
+  CREATE TABLE clicks(click_id INTEGER PRIMARY KEY, user_id INTEGER, product_id INTEGER, product_name TEXT, click_date TEXT);
+  CREATE TABLE applications(application_id INTEGER PRIMARY KEY, user_id INTEGER, product_id INTEGER, app_date TEXT, approved INTEGER);
+  `);
+  const customers = [
+    [1,'Amira','Toronto','2024-03-10',780],[2,'Ben','Toronto','2024-06-22',640],
+    [3,'Chen','Ottawa','2025-01-05',710],[4,'Dana','Calgary','2025-02-14',null],
+    [5,'Elif','Toronto','2025-04-01',590],[6,'Farid','Vancouver','2025-05-19',755],
+    [7,'Grace','Ottawa','2025-07-30',805],[8,'Hassan','Toronto','2025-09-12',668],
+    [9,'Ines','Calgary','2025-11-03',722],[10,'Jonas','Vancouver','2026-01-21',612],
+    [11,'Kira','Toronto','2026-02-08',null],[12,'Leo','Ottawa','2026-03-15',745]
+  ];
+  const accounts = [
+    [101,1,'credit_card','2024-03-15',12000,'active'],[102,1,'auto_loan','2024-09-01',25000,'active'],
+    [103,2,'credit_card','2024-07-01',5000,'closed'],[104,3,'credit_card','2025-01-10',8000,'active'],
+    [105,5,'credit_card','2025-04-05',3000,'active'],[106,6,'credit_card','2025-05-25',15000,'active'],
+    [107,6,'savings','2025-06-01',0,'active'],[108,7,'credit_card','2025-08-02',20000,'active'],
+    [109,7,'auto_loan','2025-08-15',32000,'active'],[110,7,'savings','2025-09-01',0,'closed'],
+    [111,8,'credit_card','2025-09-20',6000,'active'],[112,9,'credit_card','2025-11-10',9000,'closed'],
+    [113,10,'credit_card','2026-01-25',4000,'active'],[114,12,'credit_card','2026-03-20',10000,'active'],
+    [115,3,'savings','2025-02-01',0,'active']
+  ]; /* Dana(4) and Kira(11) have no accounts; 102,107,110,115 have no transactions */
+  const cats=['grocery','dining','travel','gas','retail','entertainment'];
+  const txns=[];let tid=9000;
+  const spec=[ /* [account, [month:count...]] months 1..6 of 2026 */
+    [101,[3,4,3,4,3,3]],[103,[2,1,2,0,1,1]],[104,[2,3,2,3,2,2]],[105,[1,1,0,1,1,0]],
+    [106,[3,2,3,3,2,3]],[108,[4,3,4,3,4,3]],[109,[1,1,1,1,1,1]],[111,[2,2,1,2,2,1]],
+    [112,[1,1,1,0,0,0]],[113,[0,2,2,2,1,2]],[114,[0,0,1,2,2,2]]
+  ];
+  let r=42; const rnd=()=>{r=(r*1103515245+12345)%2147483648;return r/2147483648;};
+  spec.forEach(([acc,months])=>{
+    months.forEach((count,mi)=>{
+      for(let k=0;k<count;k++){
+        const day=String(1+Math.floor(rnd()*27)).padStart(2,'0');
+        const m=String(mi+1).padStart(2,'0');
+        const amt=Math.round((8+rnd()*rnd()*900)*100)/100;
+        txns.push([tid++,acc,`2026-${m}-${day}`,amt,cats[Math.floor(rnd()*cats.length)]]);
+      }
+    });
+  });
+  /* crafted edge cases: exact duplicates + one big travel txn */
+  txns.push([tid++,104,'2026-03-09',300.00,'grocery']);
+  txns.push([tid++,104,'2026-03-09',300.00,'grocery']);
+  txns.push([tid++,108,'2026-05-14',75.25,'dining']);
+  txns.push([tid++,108,'2026-05-14',75.25,'dining']);
+  txns.push([tid++,106,'2026-04-18',1450.00,'travel']);
+
+  const pays=[];let pid=500;
+  const paySpec=[
+    /* customer, date, amount, method */
+    [1,'2026-03-02',900,'electronic'],[1,'2026-03-06',400,'cash'],[1,'2026-04-02',950,'electronic'],
+    [2,'2026-03-04',1200,'cash'],[2,'2026-03-19',300,'electronic'],[2,'2026-04-04',1500,'cash'],
+    [3,'2026-03-10',6000,'cash'],[3,'2026-03-11',5000,'cash'],[3,'2026-03-25',700,'electronic'],
+    [5,'2026-03-08',12500,'cash'],[5,'2026-04-08',200,'electronic'],
+    [6,'2026-03-05',800,'electronic'],[6,'2026-03-06',650,'cash'],[6,'2026-05-06',900,'electronic'],
+    [7,'2026-03-12',2000,'electronic'],[7,'2026-03-13',2400,'cash'],[7,'2026-04-13',2600,'electronic'],
+    [8,'2026-03-15',450,'cash'],[8,'2026-03-16',480,'cash'],[8,'2026-04-15',520,'electronic'],
+    [9,'2026-03-20',3300,'electronic'],[9,'2026-04-20',3100,'electronic'],
+    [10,'2026-03-22',150,'cash'],[10,'2026-04-22',175,'cash'],[10,'2026-05-22',160,'electronic'],
+    [12,'2026-04-01',5200,'cash'],[12,'2026-04-02',4600,'cash'],[12,'2026-04-28',300,'electronic'],
+    [1,'2026-05-02',880,'electronic'],[6,'2026-06-06',720,'cash'],[7,'2026-05-13',2500,'electronic'],
+    [2,'2026-05-04',950,'cash'],[8,'2026-05-16',430,'cash'],[9,'2026-05-20',2900,'electronic']
+  ];
+  paySpec.forEach(p=>pays.push([pid++,...p]));
+
+  /* funnel data: clicks and applications (CTR edge cases: repeat clicks, application without a click) */
+  const clicksData=[
+    [1,1,1,'travel_card','2026-04-03'],[2,2,1,'travel_card','2026-04-04'],[3,2,1,'travel_card','2026-04-09'],
+    [4,3,1,'travel_card','2026-04-05'],[5,5,1,'travel_card','2026-04-06'],[6,6,1,'travel_card','2026-04-08'],
+    [7,7,1,'travel_card','2026-04-10'],[8,2,2,'cashback_card','2026-04-04'],[9,4,2,'cashback_card','2026-04-07'],
+    [10,8,2,'cashback_card','2026-04-11'],[11,9,2,'cashback_card','2026-04-12'],[12,10,2,'cashback_card','2026-04-13'],
+    [13,3,3,'personal_loan','2026-04-06'],[14,6,3,'personal_loan','2026-04-09'],[15,12,3,'personal_loan','2026-04-14'],
+    [16,6,3,'personal_loan','2026-04-20']
+  ];
+  const appsData=[
+    [901,1,1,'2026-04-05',1],[902,5,1,'2026-04-08',1],[903,7,1,'2026-04-12',0],
+    [904,4,2,'2026-04-09',1],[905,9,2,'2026-04-14',1],
+    [906,12,3,'2026-04-16',1],[907,8,3,'2026-04-18',1] /* user 8 applied to loan without clicking it */
+  ];
+
+  const ins=(t,rows,n)=>{const st=db.prepare(`INSERT INTO ${t} VALUES (${'?,'.repeat(n-1)}?)`);rows.forEach(rw=>st.run(rw));st.free();};
+  ins('customers',customers,5);ins('accounts',accounts,6);ins('transactions',txns,5);ins('payments',pays,5);
+  ins('clicks',clicksData,5);ins('applications',appsData,5);
+
+
+  /* ---- Top 100 schema (employees / products / orders world) ---- */
+  db.run(`
+  CREATE TABLE departments(department_id INTEGER PRIMARY KEY, department_name TEXT, created_date TEXT);
+  CREATE TABLE employees(emp_id INTEGER PRIMARY KEY, name TEXT, department_id INTEGER, manager_id INTEGER, salary INTEGER, hire_date TEXT, job_title TEXT, gender TEXT);
+  CREATE TABLE employees_archive(emp_id INTEGER PRIMARY KEY, name TEXT, department_id INTEGER, manager_id INTEGER, salary INTEGER, hire_date TEXT, job_title TEXT, gender TEXT);
+  CREATE TABLE products(product_id INTEGER PRIMARY KEY, product_name TEXT, category TEXT, price REAL);
+  CREATE TABLE orders(order_id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, amount REAL, rep_id INTEGER, discount REAL);
+  CREATE TABLE order_items(item_id INTEGER PRIMARY KEY, order_id INTEGER, product_id INTEGER, quantity INTEGER);
+  CREATE TABLE salary_history(hist_id INTEGER PRIMARY KEY, emp_id INTEGER, change_date TEXT, old_salary INTEGER, new_salary INTEGER);
+  CREATE TABLE logins(login_id INTEGER PRIMARY KEY, user_id INTEGER, login_date TEXT);
+  CREATE TABLE bookings(booking_id INTEGER PRIMARY KEY, room_id TEXT, start_date TEXT, end_date TEXT);
+  `);
+  const t100_departments=[
+  [1,'Engineering','2015-01-01'],
+  [2,'Sales','2016-03-01'],
+  [3,'Finance','2017-06-01'],
+  [4,'HR','2018-01-01'],
+  [5,'Research','2024-01-01']
+  ];
+  const t100_employees=[
+  [1,'Victor Hale',1,null,150000,'2015-01-05','CEO','M'],
+  [2,'Wendy Cross',1,1,120000,'2015-06-01','VP','F'],
+  [3,'Omar Diaz',2,1,118000,'2016-03-15','VP','M'],
+  [4,'Priya Nair',3,1,115000,'2017-07-01','VP','F'],
+  [5,'Sam Ortiz',1,2,95000,'2016-02-01','Manager','M'],
+  [6,'Lena Park',1,2,95000,'2017-09-10','Manager','F'],
+  [7,'Igor Petrov',2,3,90000,'2017-01-20','Manager','M'],
+  [8,'Maya Chen',2,3,88000,'2018-04-01','Manager','F'],
+  [9,'Tara Volkov',3,4,115000,'2019-05-05','Manager','F'],
+  [10,'David Kim',1,5,82000,'2018-08-01','Engineer','M'],
+  [11,'Noah Reed',1,5,99000,'2019-03-01','Engineer','M'],
+  [12,'Ava Sosa',1,5,76000,'2020-01-15','Engineer','F'],
+  [13,'Liam Fox',1,6,72000,'2020-06-01','Engineer','M'],
+  [14,'Zoe Adler',1,6,72000,'2021-02-01','Manager','F'],
+  [15,'Ethan Wu',1,6,68000,'2021-09-01','Engineer','M'],
+  [16,'Ruby Shaw',2,7,65000,'2019-11-01','Sales Rep','F'],
+  [17,'Owen Hart',2,7,61000,'2020-04-01','Sales Rep','M'],
+  [18,'Mia Silva',2,8,59000,'2021-01-10','Sales Rep','F'],
+  [19,'Jack Cole',2,8,57000,'2022-03-01','Sales Rep','M'],
+  [20,'Nina Petro',2,8,63000,'2016-05-01','Sales Rep','F'],
+  [21,'David Kim',3,9,54000,'2022-07-01','Analyst','M'],
+  [22,'Elle Grant',3,9,52000,'2023-02-01','Analyst','F'],
+  [23,'Raj Patel',3,9,98000,'2020-10-01','Accountant','M'],
+  [24,'Sofia Ellis',4,2,58000,'2019-06-15','HR Specialist','F'],
+  [25,'Theo Marsh',4,2,56000,'2026-03-01','HR Specialist','M']
+  ];
+  const t100_archive=[
+  [1,'Victor Hale',1,null,150000,'2015-01-05','CEO','M'],
+  [2,'Wendy Cross',1,1,120000,'2015-06-01','VP','F'],
+  [3,'Omar Diaz',2,1,117000,'2016-03-15','VP','M'],
+  [4,'Priya Nair',3,1,115000,'2017-07-01','VP','F'],
+  [5,'Sam Ortiz',1,2,95000,'2016-02-01','Team Lead','M'],
+  [7,'Igor Petrov',2,3,90000,'2017-01-20','Manager','M'],
+  [8,'Maya Chen',2,3,88000,'2018-04-01','Manager','F'],
+  [9,'Tara Volkov',3,4,115000,'2019-05-05','Manager','F'],
+  [10,'David Kim',1,5,82000,'2018-08-01','Engineer','M'],
+  [11,'Noah Reed',1,5,99000,'2019-03-01','Engineer','M'],
+  [12,'Ava Sosa',1,5,76000,'2020-01-15','Engineer','F'],
+  [13,'Liam Fox',1,6,72000,'2020-06-01','Engineer','M'],
+  [14,'Zoe Adler',1,6,72000,'2021-02-01','Manager','F'],
+  [15,'Ethan Wu',1,6,68000,'2021-09-01','Engineer','M'],
+  [16,'Ruby Shaw',2,7,65000,'2019-11-01','Sales Rep','F'],
+  [17,'Owen Hart',2,7,61000,'2020-04-01','Sales Rep','M'],
+  [18,'Mia Silva',2,8,59000,'2021-01-10','Sales Rep','F'],
+  [19,'Jack Cole',2,8,57000,'2022-03-01','Sales Rep','M'],
+  [20,'Nina Petro',2,8,63000,'2016-05-01','Sales Rep','F'],
+  [21,'David Kim',3,9,54000,'2022-07-01','Analyst','M'],
+  [22,'Elle Grant',3,9,52000,'2023-02-01','Analyst','F'],
+  [23,'Raj Patel',3,9,98000,'2020-10-01','Accountant','M'],
+  [24,'Sofia Ellis',4,2,58000,'2019-06-15','HR Specialist','F'],
+  [25,'Theo Marsh',4,2,56000,'2026-03-01','HR Specialist','M'],
+  [99,'Ghost Row',5,null,10000,'2024-05-05','Intern','M']
+  ];
+  const t100_products=[
+  [1,'AlphaPad','Electronics',350],
+  [2,'BetaPhone','Electronics',600],
+  [3,'GigaWatch','Electronics',220],
+  [4,'ComfyChair','Furniture',180],
+  [5,'OakDesk','Furniture',420],
+  [6,'LuxLamp','Furniture',95],
+  [7,'ProteinMix','Grocery',45],
+  [8,'CoffeeBeans','Grocery',30],
+  [9,'TrailShoes','Sports',130],
+  [10,'YogaMat','Sports',40]
+  ];
+  const t100_orders=[
+  [5001,1,'2025-01-20',700.0,16,0],
+  [5002,7,'2025-02-14',380.0,17,20.0],
+  [5003,2,'2025-03-10',640.0,18,0],
+  [5004,1,'2025-04-22',450.0,16,0],
+  [5005,6,'2025-05-30',75.0,20,0],
+  [5006,8,'2025-06-18',260.0,17,0],
+  [5008,1,'2025-07-09',630.0,18,0],
+  [5009,3,'2025-08-25',130.0,16,0],
+  [5010,9,'2025-09-12',150.0,20,15.0],
+  [5011,1,'2025-10-05',420.0,17,0],
+  [5012,5,'2025-11-11',220.0,18,0],
+  [5013,6,'2025-12-19',660.0,16,0],
+  [5014,1,'2026-01-06',380.0,16,0],
+  [5015,3,'2026-01-15',95.0,17,0],
+  [5016,7,'2026-01-21',480.0,18,25.0],
+  [5017,12,'2026-01-28',180.0,20,0],
+  [5018,1,'2026-02-09',130.0,16,0],
+  [5019,7,'2026-02-17',730.0,17,0],
+  [5020,8,'2026-02-23',90.0,18,0],
+  [5021,1,'2026-03-05',560.0,20,0],
+  [5022,7,'2026-03-14',300.0,16,0],
+  [5024,7,'2026-03-14',210.0,16,10.0],
+  [5025,9,'2026-03-20',150.0,17,0],
+  [5026,9,'2026-03-20',150.0,17,0],
+  [5027,5,'2026-03-27',440.0,18,0],
+  [5028,1,'2026-04-02',350.0,16,0],
+  [5029,6,'2026-04-02',260.0,17,0],
+  [5030,7,'2026-04-03',610.0,18,30.0],
+  [5031,12,'2026-04-15',95.0,20,0],
+  [5032,3,'2026-04-24',270.0,16,0],
+  [5033,1,'2026-05-08',240.0,17,0],
+  [5034,7,'2026-05-16',390.0,18,0],
+  [5035,8,'2026-05-21',160.0,16,0],
+  [5036,6,'2026-05-28',520.0,20,0],
+  [5037,1,'2026-06-04',310.0,16,0],
+  [5038,7,'2026-06-12',280.0,17,15.0],
+  [5039,9,'2026-06-19',430.0,18,0],
+  [5040,3,'2026-06-25',120.0,20,0],
+  [5041,12,'2026-06-27',350.0,16,0]
+  ];
+  const t100_items=[
+  [1,5001,2,1],
+  [2,5001,8,2],
+  [3,5002,1,1],
+  [4,5002,8,1],
+  [5,5003,2,1],
+  [6,5003,8,1],
+  [7,5004,5,1],
+  [8,5004,8,1],
+  [9,5005,6,1],
+  [10,5005,8,1],
+  [11,5006,3,1],
+  [12,5006,8,1],
+  [13,5008,2,1],
+  [14,5008,8,1],
+  [15,5009,9,1],
+  [16,5010,9,1],
+  [17,5010,8,1],
+  [18,5011,5,1],
+  [19,5011,7,1],
+  [20,5012,3,1],
+  [21,5012,8,1],
+  [22,5013,2,1],
+  [23,5013,8,2],
+  [24,5014,1,1],
+  [25,5014,8,1],
+  [26,5015,9,1],
+  [27,5015,8,1],
+  [28,5016,5,1],
+  [29,5016,7,1],
+  [30,5017,4,1],
+  [31,5018,6,1],
+  [32,5018,8,1],
+  [33,5019,2,1],
+  [34,5019,9,2],
+  [35,5020,7,2],
+  [36,5021,2,1],
+  [37,5022,9,3],
+  [38,5024,3,1],
+  [39,5025,9,1],
+  [40,5026,4,1],
+  [41,5027,5,1],
+  [42,5028,1,1],
+  [43,5029,3,1],
+  [44,5030,2,1],
+  [45,5031,6,1],
+  [46,5032,4,1],
+  [47,5032,7,1],
+  [48,5033,3,1],
+  [49,5034,5,1],
+  [50,5035,7,2],
+  [51,5036,2,1],
+  [52,5037,4,1],
+  [53,5038,9,1],
+  [54,5039,5,1],
+  [55,5040,7,1],
+  [56,5041,1,1],
+  [57,5006,2,1],
+  [58,5017,8,1],
+  [59,5022,3,1]
+  ];
+  const t100_salhist=[
+  [1,11,'2024-01-15',90000,95000],
+  [2,11,'2025-08-01',95000,99000],
+  [3,10,'2023-05-01',78000,82000],
+  [4,16,'2025-12-01',62000,65000],
+  [5,23,'2024-03-01',90000,98000],
+  [6,5,'2026-02-01',92000,95000],
+  [7,6,'2025-11-15',91000,95000],
+  [8,2,'2022-06-01',110000,120000]
+  ];
+  const t100_logins=[
+  [1,1,'2026-02-03'],
+  [2,1,'2026-02-10'],
+  [3,1,'2026-02-11'],
+  [4,1,'2026-02-12'],
+  [5,1,'2026-02-13'],
+  [6,1,'2026-02-14'],
+  [7,1,'2026-02-20'],
+  [8,3,'2026-02-05'],
+  [9,3,'2026-02-06'],
+  [10,3,'2026-02-09'],
+  [11,3,'2026-02-12'],
+  [12,6,'2026-03-01'],
+  [13,6,'2026-03-02'],
+  [14,8,'2026-03-10']
+  ];
+  const t100_bookings=[
+  [1,'RoomA','2026-04-01','2026-04-05'],
+  [2,'RoomA','2026-04-04','2026-04-08'],
+  [3,'RoomA','2026-04-10','2026-04-12'],
+  [4,'RoomB','2026-04-02','2026-04-03'],
+  [5,'RoomB','2026-04-03','2026-04-06'],
+  [6,'RoomC','2026-05-01','2026-05-02']
+  ];
+  ins('departments',t100_departments,3);ins('employees',t100_employees,8);
+  ins('employees_archive',t100_archive,8);ins('products',t100_products,4);
+  ins('orders',t100_orders,6);ins('order_items',t100_items,4);
+  ins('salary_history',t100_salhist,5);ins('logins',t100_logins,3);
+  ins('bookings',t100_bookings,4);
+
+  /* MySQL compatibility functions */
+  const pad=n=>String(n).padStart(2,'0');
+  db.create_function('YEAR',d=>d?parseInt(String(d).slice(0,4)):null);
+  db.create_function('MONTH',d=>d?parseInt(String(d).slice(5,7)):null);
+  db.create_function('DAY',d=>d?parseInt(String(d).slice(8,10)):null);
+  db.create_function('QUARTER',d=>d?Math.ceil(parseInt(String(d).slice(5,7))/3):null);
+  db.create_function('DAYNAME',d=>d?['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(d+'T00:00:00').getDay()]:null);
+  db.create_function('DATE_FORMAT',(d,f)=>{if(!d)return null;const s=String(d);
+    return String(f).replace(/%Y/g,s.slice(0,4)).replace(/%m/g,s.slice(5,7)).replace(/%d/g,s.slice(8,10));});
+  db.create_function('DATEDIFF',(a,b)=>(!a||!b)?null:Math.round((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000));
+  db.create_function('CURDATE',()=>{const n=new Date();return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`;});
+  db.create_function('NOW',()=>new Date().toISOString().slice(0,19).replace('T',' '));
+  db.create_function('LEFT',(s,n)=>s==null?null:String(s).slice(0,n));
+  db.create_function('RIGHT',(s,n)=>s==null?null:String(s).slice(-n));
+  db.create_function('CONCAT',(a,b)=>String(a??'')+String(b??''));
+}
+
+/* rewrite MySQL-only syntax into SQLite equivalents */
+function mysqlCompat(sql){
+  let q=sql;
+  q=q.replace(/DATE_ADD\s*\(\s*([^,()]+|\w+\([^()]*\))\s*,\s*INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)S?\s*\)/gi,
+    (m,e,n,u)=>`date(${e}, '+${n} ${u.toLowerCase()}')`);
+  q=q.replace(/DATE_SUB\s*\(\s*([^,()]+|\w+\([^()]*\))\s*,\s*INTERVAL\s+(\d+)\s+(DAY|MONTH|YEAR)S?\s*\)/gi,
+    (m,e,n,u)=>`date(${e}, '-${n} ${u.toLowerCase()}')`);
+  return q;
+}
+
+/* map engine errors to MySQL-style messages */
+function mysqlError(msg,sql){
+  const m=String(msg);
+  let mm=m.match(/no such table:\s*(\S+)/i);
+  if(mm) return `ERROR 1146 (42S02): Table 'practice.${mm[1]}' doesn't exist`;
+  mm=m.match(/no such column:\s*(\S+)/i);
+  if(mm) return `ERROR 1054 (42S22): Unknown column '${mm[1]}' in 'field list'`;
+  mm=m.match(/ambiguous column name:\s*(\S+)/i);
+  if(mm) return `ERROR 1052 (23000): Column '${mm[1]}' in field list is ambiguous`;
+  if(/misuse of aggregate/i.test(m)) return `ERROR 1111 (HY000): Invalid use of group function\nTip: aggregate conditions belong in HAVING, not WHERE.`;
+  if(/no such function:\s*(\S+)/i.test(m)){const f=m.match(/no such function:\s*(\S+)/i)[1];
+    return `ERROR 1305 (42000): FUNCTION practice.${f} does not exist`;}
+  if(/syntax error/i.test(m)){
+    const near=m.match(/near\s+"([^"]*)"/i);
+    return `ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '${near?near[1]:'...'}'`;
+  }
+  return 'ERROR: '+m;
+}
+
+function runSQL(sql, maxRows, budgetMs){
+  /* Streams rows with a cap and a time budget so a runaway query
+     (e.g. an accidental CROSS JOIN) cannot freeze the browser. */
+  maxRows = maxRows || 500;
+  budgetMs = budgetMs || 4000;
+  const compiled = mysqlCompat(sql);
+  const results = [];
+  const start = performance.now();
+  const runStmt = (stmt)=>{
+    const cols = stmt.getColumnNames();
+    if(!cols.length){ while(stmt.step()){} return; }   /* non-SELECT statement */
+    const values = [];
+    let i = 0, truncated = false;
+    while(stmt.step()){
+      values.push(stmt.get());
+      i++;
+      if(i >= maxRows){ truncated = true; break; }
+      if((i & 127) === 0 && performance.now() - start > budgetMs){
+        const e = new Error('QUERY_LIMIT'); e.qlimit = true; throw e;
+      }
+    }
+    results.push({columns: cols, values, truncated});
+  };
+  if(typeof db.iterateStatements === 'function'){
+    for(const stmt of db.iterateStatements(compiled)){
+      runStmt(stmt);
+      if(performance.now() - start > budgetMs){
+        const e = new Error('QUERY_LIMIT'); e.qlimit = true; throw e;
+      }
+    }
+  }else{
+    const stmt = db.prepare(compiled);
+    try{ runStmt(stmt); } finally { stmt.free(); }
+  }
+  return results;
+}
+
+/* ---------- question bank ---------- */
+const QUESTIONS=[
+ {topic:'Basics and filtering',title:'Toronto prime customers',
+  prompt:`Return the <code>name</code> and <code>credit_score</code> of customers in Toronto with a credit score above 700, highest score first.`,
+  hint:'WHERE with two conditions joined by AND, then ORDER BY ... DESC.',
+  sol:`SELECT name, credit_score\nFROM customers\nWHERE city = 'Toronto' AND credit_score > 700\nORDER BY credit_score DESC;`,order:true},
+ {topic:'Basics and filtering',title:'Distinct cities',
+  prompt:`List each city that appears in the customers table exactly once (no duplicates).`,
+  hint:'One keyword does all the work here.',
+  sol:`SELECT DISTINCT city FROM customers;`,order:false},
+ {topic:'Basics and filtering',title:'Large spring travel transactions',
+  prompt:`Return all columns of transactions in the <code>travel</code> or <code>entertainment</code> categories with an amount over $200, between 2026-03-01 and 2026-05-31 inclusive.`,
+  hint:'IN for the category list, BETWEEN for the dates.',
+  sol:`SELECT *\nFROM transactions\nWHERE merchant_category IN ('travel','entertainment')\n  AND amount > 200\n  AND transaction_date BETWEEN '2026-03-01' AND '2026-05-31';`,order:false},
+
+ {topic:'Aggregates',title:'Portfolio snapshot',
+  prompt:`In one query on the accounts table, return: total number of accounts, number of distinct customers with an account, and the average credit limit of <code>credit_card</code> accounts only (alias it <code>avg_card_limit</code>).`,
+  hint:'COUNT(*), COUNT(DISTINCT ...), and AVG over a CASE WHEN (or a conditional trick).',
+  sol:`SELECT COUNT(*) AS total_accounts,\n       COUNT(DISTINCT customer_id) AS customers_with_accounts,\n       AVG(CASE WHEN product_type = 'credit_card' THEN credit_limit END) AS avg_card_limit\nFROM accounts;`,order:false},
+ {topic:'Aggregates',title:'NULL-aware counting',
+  prompt:`From customers, return the number of customers with a known credit score (alias <code>scored</code>) and the number missing one (alias <code>unscored</code>).`,
+  hint:'COUNT(column) skips NULLs. For the missing ones, COUNT(*) minus COUNT(column) or SUM(CASE WHEN ... IS NULL ...).',
+  sol:`SELECT COUNT(credit_score) AS scored,\n       COUNT(*) - COUNT(credit_score) AS unscored\nFROM customers;`,order:false},
+
+ {topic:'GROUP BY and HAVING',title:'Accounts per product',
+  prompt:`Count how many accounts exist for each <code>product_type</code>.`,
+  hint:'GROUP BY the product type; COUNT(*) per group.',
+  sol:`SELECT product_type, COUNT(*) AS num_accounts\nFROM accounts\nGROUP BY product_type;`,order:false},
+ {topic:'GROUP BY and HAVING',title:'High-average categories',
+  prompt:`Return each <code>merchant_category</code> and its average transaction amount, but only categories whose average exceeds $150, sorted from highest to lowest average.`,
+  hint:'The filter is on an aggregate, so it cannot go in WHERE.',
+  sol:`SELECT merchant_category, AVG(amount) AS avg_amount\nFROM transactions\nGROUP BY merchant_category\nHAVING AVG(amount) > 150\nORDER BY avg_amount DESC;`,order:true},
+ {topic:'GROUP BY and HAVING',title:'Monthly volume in 2026',
+  prompt:`Show each month of 2026 as <code>YYYY-MM</code> with its total transaction amount, in chronological order.`,
+  hint:`DATE_FORMAT(transaction_date, '%Y-%m') makes the bucket; group and order by it.`,
+  sol:`SELECT DATE_FORMAT(transaction_date, '%Y-%m') AS txn_month,\n       SUM(amount) AS monthly_volume\nFROM transactions\nWHERE YEAR(transaction_date) = 2026\nGROUP BY txn_month\nORDER BY txn_month;`,order:true},
+
+ {topic:'Joins',title:'Multi-account customers',
+  prompt:`Return the names of customers who hold more than 2 accounts, with their account count.`,
+  hint:'JOIN customers to accounts, GROUP BY the customer, filter the count in HAVING.',
+  sol:`SELECT c.name, COUNT(a.account_id) AS num_accounts\nFROM customers c\nJOIN accounts a ON a.customer_id = c.customer_id\nGROUP BY c.customer_id, c.name\nHAVING COUNT(a.account_id) > 2;`,order:false},
+ {topic:'Joins',title:'The anti-join: silent accounts',
+  prompt:`Return the <code>account_id</code> of every account that has never had a single transaction.`,
+  hint:'LEFT JOIN transactions, then keep the rows where the right side is NULL.',
+  sol:`SELECT a.account_id\nFROM accounts a\nLEFT JOIN transactions t ON t.account_id = a.account_id\nWHERE t.transaction_id IS NULL;`,order:false},
+ {topic:'Joins',title:'Customers with no accounts at all',
+  prompt:`Return the names of customers who do not have any account.`,
+  hint:'Same anti-join pattern, one table earlier in the chain.',
+  sol:`SELECT c.name\nFROM customers c\nLEFT JOIN accounts a ON a.customer_id = c.customer_id\nWHERE a.account_id IS NULL;`,order:false},
+ {topic:'Joins',title:'Top 5 spenders (3-table chain)',
+  prompt:`Return the top 5 customers by total transaction amount across all their accounts: <code>name</code> and total spend, highest first.`,
+  hint:'customers -> accounts -> transactions, GROUP BY customer, ORDER BY the sum DESC, LIMIT 5.',
+  sol:`SELECT c.name, SUM(t.amount) AS total_spend\nFROM customers c\nJOIN accounts a ON a.customer_id = c.customer_id\nJOIN transactions t ON t.account_id = a.account_id\nGROUP BY c.customer_id, c.name\nORDER BY total_spend DESC\nLIMIT 5;`,order:true},
+
+ {topic:'CASE WHEN',title:'Credit bands',
+  prompt:`Bucket customers into bands - <code>Prime</code> (750+), <code>Near-prime</code> (650-749), <code>Unscored</code> (NULL score), <code>Subprime</code> (everything else) - and count customers per band.`,
+  hint:'CASE WHEN checks run top-down; test IS NULL before the numeric comparisons or put it in its own branch.',
+  sol:`SELECT CASE WHEN credit_score >= 750 THEN 'Prime'\n            WHEN credit_score >= 650 THEN 'Near-prime'\n            WHEN credit_score IS NULL THEN 'Unscored'\n            ELSE 'Subprime' END AS band,\n       COUNT(*) AS num_customers\nFROM customers\nGROUP BY band;`,order:false},
+ {topic:'CASE WHEN',title:'Share of active accounts',
+  prompt:`Return one number: the percentage of all accounts with status <code>active</code>, rounded to 1 decimal place, aliased <code>pct_active</code>.`,
+  hint:'SUM(CASE WHEN ... THEN 1 ELSE 0 END) over COUNT(*). Multiply by 100.0 to avoid integer division.',
+  sol:`SELECT ROUND(100.0 * SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END)\n           / COUNT(*), 1) AS pct_active\nFROM accounts;`,order:false},
+ {topic:'CASE WHEN',title:'Pivot: March vs April spend',
+  prompt:`For each <code>merchant_category</code>, return two columns in one row: total spend in March 2026 (<code>mar_spend</code>) and in April 2026 (<code>apr_spend</code>).`,
+  hint:'Two SUM(CASE WHEN MONTH(...) = x THEN amount ELSE 0 END) columns - a manual pivot.',
+  sol:`SELECT merchant_category,\n       SUM(CASE WHEN MONTH(transaction_date) = 3 THEN amount ELSE 0 END) AS mar_spend,\n       SUM(CASE WHEN MONTH(transaction_date) = 4 THEN amount ELSE 0 END) AS apr_spend\nFROM transactions\nWHERE YEAR(transaction_date) = 2026\nGROUP BY merchant_category;`,order:false},
+
+ {topic:'Dates',title:'Recency per customer',
+  prompt:`For each customer who has transactions, return their <code>customer_id</code> and most recent transaction date (alias <code>last_txn</code>).`,
+  hint:'Join accounts to transactions and take MAX of the date per customer.',
+  sol:`SELECT a.customer_id, MAX(t.transaction_date) AS last_txn\nFROM accounts a\nJOIN transactions t ON t.account_id = a.account_id\nGROUP BY a.customer_id;`,order:false},
+ {topic:'Dates',title:'Days on book',
+  prompt:`Return each customer's <code>name</code> and the number of days between their signup date and 2026-07-01 (alias <code>days_on_book</code>).`,
+  hint:`DATEDIFF('2026-07-01', signup_date).`,
+  sol:`SELECT name, DATEDIFF('2026-07-01', signup_date) AS days_on_book\nFROM customers;`,order:false},
+
+ {topic:'Subqueries and CTEs',title:'Above-average transactions',
+  prompt:`Return the <code>transaction_id</code> and <code>amount</code> of every transaction larger than the overall average amount.`,
+  hint:'A scalar subquery in the WHERE clause.',
+  sol:`SELECT transaction_id, amount\nFROM transactions\nWHERE amount > (SELECT AVG(amount) FROM transactions);`,order:false},
+ {topic:'Subqueries and CTEs',title:'Average customer, not average transaction',
+  prompt:`Return one number, <code>avg_customer_spend</code>: the average of each customer's total spend. (This is different from AVG(amount) - say out loud why.)`,
+  hint:'First aggregate to one row per customer (derived table or CTE), then average that column.',
+  sol:`WITH per_cust AS (\n  SELECT a.customer_id, SUM(t.amount) AS total_spend\n  FROM accounts a\n  JOIN transactions t ON t.account_id = a.account_id\n  GROUP BY a.customer_id\n)\nSELECT AVG(total_spend) AS avg_customer_spend\nFROM per_cust;`,order:false},
+ {topic:'Subqueries and CTEs',title:'Duplicate transaction detection',
+  prompt:`Find potential duplicates: <code>account_id</code>, <code>transaction_date</code>, <code>amount</code> combinations appearing more than once, with a count.`,
+  hint:'GROUP BY all three columns; HAVING COUNT(*) > 1.',
+  sol:`SELECT account_id, transaction_date, amount, COUNT(*) AS occurrences\nFROM transactions\nGROUP BY account_id, transaction_date, amount\nHAVING COUNT(*) > 1;`,order:false},
+
+ {topic:'Window functions',title:'Largest transaction per account',
+  prompt:`Return each account's single largest transaction: <code>account_id</code>, <code>transaction_date</code>, <code>amount</code>. If two tie, either is accepted - use ROW_NUMBER.`,
+  hint:'ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY amount DESC) in a subquery, then filter rn = 1 outside.',
+  sol:`SELECT account_id, transaction_date, amount\nFROM (\n  SELECT t.*, ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY amount DESC, transaction_id) AS rn\n  FROM transactions t\n) x\nWHERE rn = 1;`,order:false,tolerant:true},
+ {topic:'Window functions',title:'Running total for account 101',
+  prompt:`For account 101, return each transaction's date, amount, and a running cumulative total (<code>running_total</code>) ordered by date.`,
+  hint:'SUM(amount) OVER (ORDER BY transaction_date) after filtering to the account.',
+  sol:`SELECT transaction_date, amount,\n       SUM(amount) OVER (ORDER BY transaction_date, transaction_id) AS running_total\nFROM transactions\nWHERE account_id = 101\nORDER BY transaction_date;`,order:true,tolerant:true},
+ {topic:'Window functions',title:'Second-highest credit limit',
+  prompt:`Return the second-highest distinct <code>credit_limit</code> among credit_card accounts. Any of the three classic approaches is fine.`,
+  hint:'MAX below MAX, or ORDER BY DESC LIMIT 1 OFFSET 1 on distinct values, or DENSE_RANK = 2.',
+  sol:`SELECT MAX(credit_limit) AS second_highest\nFROM accounts\nWHERE product_type = 'credit_card'\n  AND credit_limit < (SELECT MAX(credit_limit) FROM accounts WHERE product_type = 'credit_card');`,order:false},
+
+ {topic:'Reported real-interview questions',title:'T1: Cash received each day',
+  prompt:`Using the <code>payments</code> table: how much do we receive in cash payments (total dollars) each day? Return the date and total, in date order. <em>Reported from a real bank data-analyst interview.</em>`,
+  hint:`Filter method = 'cash' in WHERE, group by the date.`,
+  sol:`SELECT payment_date, SUM(amount) AS total_cash\nFROM payments\nWHERE method = 'cash'\nGROUP BY payment_date\nORDER BY payment_date;`,order:true},
+ {topic:'Reported real-interview questions',title:'T2: More cash than electronic',
+  prompt:`Identify all customers (<code>customer_id</code>) who have more payment dollars in cash than electronically. <em>Reported real question.</em>`,
+  hint:'Conditional aggregation: build both totals with SUM(CASE WHEN ...) and compare them in HAVING.',
+  sol:`SELECT customer_id\nFROM payments\nGROUP BY customer_id\nHAVING SUM(CASE WHEN method = 'cash' THEN amount ELSE 0 END)\n     > SUM(CASE WHEN method = 'electronic' THEN amount ELSE 0 END);`,order:false},
+ {topic:'Reported real-interview questions',title:'T3: $10,000 cash in any two days',
+  prompt:`Identify all customers who made over $10,000 in cash payments during any two consecutive calendar days. <em>Reported real question - the hardest one. A single day over $10,000 also qualifies.</em>`,
+  hint:'Step 1: collapse to daily cash totals per customer (CTE). Step 2: self-join each anchor day to itself and the next day; sum and filter with HAVING > 10000.',
+  sol:`WITH daily AS (\n  SELECT customer_id, payment_date, SUM(amount) AS day_cash\n  FROM payments\n  WHERE method = 'cash'\n  GROUP BY customer_id, payment_date\n)\nSELECT DISTINCT d1.customer_id\nFROM daily d1\nJOIN daily d2\n  ON d2.customer_id = d1.customer_id\n AND d2.payment_date IN (d1.payment_date, DATE_ADD(d1.payment_date, INTERVAL 1 DAY))\nGROUP BY d1.customer_id, d1.payment_date\nHAVING SUM(d2.day_cash) > 10000;`,order:false},
+
+ {topic:'Core interview patterns',title:'R1: Top 3 categories per customer',
+  prompt:`For each customer with transactions, return their top 3 merchant categories by total spend: <code>customer_id</code>, <code>merchant_category</code>, total spend. Break spend ties alphabetically by category. <em>"Top 3 merchants by spend for each customer" is a documented real-interview question.</em>`,
+  hint:'Aggregate per customer per category first (CTE), then ROW_NUMBER() OVER (PARTITION BY customer ORDER BY spend DESC, category), filter rn <= 3 outside.',
+  sol:`WITH cat AS (\n  SELECT a.customer_id, t.merchant_category, SUM(t.amount) AS spend\n  FROM accounts a\n  JOIN transactions t ON t.account_id = a.account_id\n  GROUP BY a.customer_id, t.merchant_category\n)\nSELECT customer_id, merchant_category, spend\nFROM (\n  SELECT cat.*, ROW_NUMBER() OVER (PARTITION BY customer_id\n                                   ORDER BY spend DESC, merchant_category) AS rn\n  FROM cat\n) x\nWHERE rn <= 3;`,order:false},
+ {topic:'Core interview patterns',title:'R2: Inactive in the last 30 days',
+  prompt:`Using 2026-06-30 as "today": return the <code>customer_id</code> and <code>name</code> of customers who have at least one account but made no transactions in the last 30 days (i.e. after 2026-05-31). <em>"Users with no transactions in the last 30 days" is a documented real-interview question.</em>`,
+  hint:'LEFT JOIN transactions with the date condition inside the ON clause (not WHERE), then HAVING COUNT of transactions = 0. Or NOT EXISTS.',
+  sol:`SELECT c.customer_id, c.name\nFROM customers c\nJOIN accounts a ON a.customer_id = c.customer_id\nLEFT JOIN transactions t ON t.account_id = a.account_id\n                        AND t.transaction_date > '2026-05-31'\nGROUP BY c.customer_id, c.name\nHAVING COUNT(t.transaction_id) = 0;`,order:false},
+ {topic:'Core interview patterns',title:'R3: Funnel - click-through rate per product',
+  prompt:`Using <code>clicks</code> and <code>applications</code>: for each product, compute CTR = unique users who applied after clicking / unique users who clicked. Return <code>product_name</code> and <code>ctr</code> rounded to 2 decimals. Note: one user applied without clicking - they must not count. <em>This CTR question is a documented real-interview SQL question.</em>`,
+  hint:'Start FROM clicks, LEFT JOIN applications on user AND product. COUNT(DISTINCT) both sides. The join direction handles the no-click applicant automatically.',
+  sol:`SELECT c.product_name,\n       ROUND(1.0 * COUNT(DISTINCT ap.user_id) / COUNT(DISTINCT c.user_id), 2) AS ctr\nFROM clicks c\nLEFT JOIN applications ap ON ap.user_id = c.user_id\n                         AND ap.product_id = c.product_id\nGROUP BY c.product_id, c.product_name;`,order:false},
+ {topic:'Core interview patterns',title:'R4: Month-over-month growth',
+  prompt:`Return each 2026 month (<code>YYYY-MM</code>), its total transaction amount rounded to 2 decimals, and the percent change versus the prior month rounded to 1 decimal (NULL for the first month), in chronological order. <em>LAG-based trend analysis is a staple of this round.</em>`,
+  hint:'CTE of monthly totals, then LAG(total) OVER (ORDER BY month) and (cur - prev) / prev * 100.',
+  sol:`WITH monthly AS (\n  SELECT DATE_FORMAT(transaction_date, '%Y-%m') AS m, SUM(amount) AS total\n  FROM transactions\n  GROUP BY m\n)\nSELECT m, ROUND(total, 2) AS total,\n       ROUND(100.0 * (total - LAG(total) OVER (ORDER BY m))\n             / LAG(total) OVER (ORDER BY m), 1) AS mom_pct\nFROM monthly\nORDER BY m;`,order:true},
+ {topic:'Core interview patterns',title:'R5: 3-month rolling average',
+  prompt:`Return each 2026 month and the rolling average of monthly transaction totals over that month and the two before it, rounded to 2 decimals, in order. <em>"Rolling averages with window functions" is a documented real-interview question.</em>`,
+  hint:'AVG(total) OVER (ORDER BY month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) on a monthly CTE.',
+  sol:`WITH monthly AS (\n  SELECT DATE_FORMAT(transaction_date, '%Y-%m') AS m, SUM(amount) AS total\n  FROM transactions\n  GROUP BY m\n)\nSELECT m,\n       ROUND(AVG(total) OVER (ORDER BY m\n             ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS rolling_avg_3m\nFROM monthly\nORDER BY m;`,order:true},
+ {topic:'Core interview patterns',title:'R6: Top segments with a size floor',
+  prompt:`Return the top 2 product types by average credit limit, considering only product types with at least 3 accounts. Return <code>product_type</code> and the average limit. <em>Modeled on the documented "top 3 departments with at least 10 employees by average salary" question.</em>`,
+  hint:'GROUP BY, HAVING COUNT(*) >= 3, ORDER BY AVG(...) DESC, LIMIT 2 - all four clauses in one query.',
+  sol:`SELECT product_type, AVG(credit_limit) AS avg_limit\nFROM accounts\nGROUP BY product_type\nHAVING COUNT(*) >= 3\nORDER BY avg_limit DESC\nLIMIT 2;`,order:true},
+ {topic:'Core interview patterns',title:'R7: Signup cohorts and 2026 activity',
+  prompt:`For each signup-year cohort, return the cohort year, the number of customers, and how many of them made at least one transaction in 2026 (<code>active_2026</code>), in year order. <em>Cohort analysis shows up constantly in analytics interviews.</em>`,
+  hint:'LEFT JOIN down to transactions with YEAR(t.date) = 2026 inside the ON clause; COUNT(DISTINCT CASE WHEN t.id IS NOT NULL THEN c.id END).',
+  sol:`SELECT YEAR(c.signup_date) AS cohort_year,\n       COUNT(DISTINCT c.customer_id) AS customers,\n       COUNT(DISTINCT CASE WHEN t.transaction_id IS NOT NULL\n                           THEN c.customer_id END) AS active_2026\nFROM customers c\nLEFT JOIN accounts a ON a.customer_id = c.customer_id\nLEFT JOIN transactions t ON t.account_id = a.account_id\n                        AND YEAR(t.transaction_date) = 2026\nGROUP BY cohort_year\nORDER BY cohort_year;`,order:true},
+ {topic:'Core interview patterns',title:'R8: Share of total spend',
+  prompt:`Return each customer's <code>name</code>, total spend rounded to 2 decimals, and their percent of all customers' spend rounded to 1 decimal (<code>pct_of_total</code>), highest spender first. <em>Percent-of-total with a window over an aggregate is a favorite senior-level pattern.</em>`,
+  hint:'Aggregate per customer in a CTE, then divide by SUM(total) OVER () - an empty OVER () spans everything.',
+  sol:`WITH per_cust AS (\n  SELECT c.name, SUM(t.amount) AS total\n  FROM customers c\n  JOIN accounts a ON a.customer_id = c.customer_id\n  JOIN transactions t ON t.account_id = a.account_id\n  GROUP BY c.customer_id, c.name\n)\nSELECT name, ROUND(total, 2) AS total,\n       ROUND(100.0 * total / SUM(total) OVER (), 1) AS pct_of_total\nFROM per_cust\nORDER BY total DESC;`,order:true},
+ {topic:'Core interview patterns',title:'R9: Clean the duplicates',
+  prompt:`Return the <code>transaction_id</code> of the extra duplicate rows that should be removed - for each (account_id, transaction_date, amount) group that appears more than once, keep the lowest transaction_id and return the rest. <em>Interviewers explicitly reward calling out NULL and duplicate handling.</em>`,
+  hint:'ROW_NUMBER() OVER (PARTITION BY the natural key ORDER BY transaction_id); rows with rn > 1 are the extras.',
+  sol:`SELECT transaction_id\nFROM (\n  SELECT transaction_id,\n         ROW_NUMBER() OVER (PARTITION BY account_id, transaction_date, amount\n                            ORDER BY transaction_id) AS rn\n  FROM transactions\n) x\nWHERE rn > 1;`,order:false},
+ {topic:'Core interview patterns',title:'R10: Challenge - 3+ consecutive active months',
+  prompt:`Return the <code>customer_id</code> of customers who had transactions in at least 3 consecutive calendar months. <em>This is the classic "gaps and islands" pattern - the hardest thing likely to appear; even a clearly narrated partial attempt scores well.</em>`,
+  hint:'Turn each active month into a number (YEAR*12 + MONTH), dedupe per customer, then month_number minus ROW_NUMBER() is constant within a consecutive run. GROUP BY that constant, HAVING COUNT(*) >= 3.',
+  sol:`WITH months AS (\n  SELECT DISTINCT a.customer_id,\n         YEAR(t.transaction_date) * 12 + MONTH(t.transaction_date) AS mn\n  FROM accounts a\n  JOIN transactions t ON t.account_id = a.account_id\n),\nruns AS (\n  SELECT customer_id, mn,\n         mn - ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY mn) AS grp\n  FROM months\n)\nSELECT DISTINCT customer_id\nFROM runs\nGROUP BY customer_id, grp\nHAVING COUNT(*) >= 3;`,order:false},
+
+ {topic:'Bonus drills (mixed difficulty)',title:'B1: Same-city customer pairs',
+  prompt:`Using a self-join, return every pair of customers who live in the same city: <code>cust1</code> (name), <code>cust2</code> (name), <code>city</code>. Each pair should appear once (no self-pairs, no reversed duplicates).`,
+  hint:'Join customers to itself on city, and require a.customer_id < b.customer_id to kill self-pairs and mirror duplicates.',
+  sol:`SELECT a.name AS cust1, b.name AS cust2, a.city\nFROM customers a\nJOIN customers b ON b.city = a.city\n               AND a.customer_id < b.customer_id;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B2: Fully active customers',
+  prompt:`Return the <code>name</code> of customers who have at least one account and whose accounts are ALL active (not a single closed one).`,
+  hint:"Group by customer; the 'none closed' condition is SUM(CASE WHEN status <> 'active' THEN 1 ELSE 0 END) = 0 in HAVING.",
+  sol:`SELECT c.name\nFROM customers c\nJOIN accounts a ON a.customer_id = c.customer_id\nGROUP BY c.customer_id, c.name\nHAVING SUM(CASE WHEN a.status <> 'active' THEN 1 ELSE 0 END) = 0;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B3: Above the city average',
+  prompt:`Return <code>account_id</code>, the owner's <code>city</code>, and <code>credit_limit</code> for accounts whose limit is strictly above the average credit limit of all accounts in that same city.`,
+  hint:'Attach AVG(credit_limit) OVER (PARTITION BY city) to every row in a subquery, then filter outside. A correlated subquery also works.',
+  sol:`SELECT account_id, city, credit_limit\nFROM (\n  SELECT a.account_id, c.city, a.credit_limit,\n         AVG(a.credit_limit) OVER (PARTITION BY c.city) AS city_avg\n  FROM accounts a\n  JOIN customers c ON c.customer_id = a.customer_id\n) x\nWHERE credit_limit > city_avg;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B4: Spiky categories',
+  prompt:`Return each <code>merchant_category</code> whose largest single transaction is more than 3 times its average transaction, with both numbers (max and average, average rounded to 2 decimals).`,
+  hint:'Two aggregates in one HAVING: MAX(amount) > 3 * AVG(amount).',
+  sol:`SELECT merchant_category, MAX(amount) AS max_amt,\n       ROUND(AVG(amount), 2) AS avg_amt\nFROM transactions\nGROUP BY merchant_category\nHAVING MAX(amount) > 3 * AVG(amount);`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B5: Account activity span',
+  prompt:`For each account with transactions, return <code>account_id</code>, first transaction date, last transaction date, and the number of days between them (<code>span_days</code>).`,
+  hint:'MIN, MAX, and DATEDIFF(MAX(...), MIN(...)) in one grouped query.',
+  sol:`SELECT account_id,\n       MIN(transaction_date) AS first_txn,\n       MAX(transaction_date) AS last_txn,\n       DATEDIFF(MAX(transaction_date), MIN(transaction_date)) AS span_days\nFROM transactions\nGROUP BY account_id;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B6: Approval rate per product',
+  prompt:`From <code>applications</code> (the <code>approved</code> column is 1 or 0), return each <code>product_id</code> with its number of applications and approval rate as a percent rounded to 1 decimal.`,
+  hint:'SUM(approved) is the approved count; divide by COUNT(*) with a 100.0 multiplier.',
+  sol:`SELECT product_id, COUNT(*) AS num_apps,\n       ROUND(100.0 * SUM(approved) / COUNT(*), 1) AS approval_rate\nFROM applications\nGROUP BY product_id;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B7: Did both A and B',
+  prompt:`Return the <code>customer_id</code> of customers who have transactions in BOTH the <code>grocery</code> and <code>travel</code> categories.`,
+  hint:'Filter to the two categories, group by customer, HAVING COUNT(DISTINCT category) = 2.',
+  sol:`SELECT a.customer_id\nFROM accounts a\nJOIN transactions t ON t.account_id = a.account_id\nWHERE t.merchant_category IN ('grocery', 'travel')\nGROUP BY a.customer_id\nHAVING COUNT(DISTINCT t.merchant_category) = 2;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B8: Busiest day of the week',
+  prompt:`Return the single day of the week (e.g. <code>Monday</code>) with the most transactions, and its count. Break ties alphabetically by day name.`,
+  hint:'DAYNAME(transaction_date), GROUP BY it, ORDER BY count DESC then day name, LIMIT 1.',
+  sol:`SELECT DAYNAME(transaction_date) AS day_name, COUNT(*) AS num_txns\nFROM transactions\nGROUP BY day_name\nORDER BY num_txns DESC, day_name\nLIMIT 1;`,order:true},
+ {topic:'Bonus drills (mixed difficulty)',title:'B9: Cumulative customer growth',
+  prompt:`Return each signup month (<code>YYYY-MM</code>), the number of new customers that month, and the running total of customers so far (<code>running_customers</code>), in chronological order.`,
+  hint:'Monthly counts in a CTE, then SUM(cnt) OVER (ORDER BY month) for the running total.',
+  sol:`WITH monthly AS (\n  SELECT DATE_FORMAT(signup_date, '%Y-%m') AS m, COUNT(*) AS new_customers\n  FROM customers\n  GROUP BY m\n)\nSELECT m, new_customers,\n       SUM(new_customers) OVER (ORDER BY m) AS running_customers\nFROM monthly\nORDER BY m;`,order:true},
+ {topic:'Bonus drills (mixed difficulty)',title:'B10: Largest payment per method',
+  prompt:`For each payment <code>method</code>, return the method, the <code>customer_id</code> who made the single largest payment, and that <code>amount</code>.`,
+  hint:'ROW_NUMBER() OVER (PARTITION BY method ORDER BY amount DESC) in a subquery; keep rn = 1.',
+  sol:`SELECT method, customer_id, amount\nFROM (\n  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY method\n                                 ORDER BY amount DESC, payment_id) AS rn\n  FROM payments p\n) x\nWHERE rn = 1;`,order:false},
+ {topic:'Bonus drills (mixed difficulty)',title:'B11: Unified activity feed (UNION)',
+  prompt:`Build one activity feed for customer 1: a row per event with <code>event_type</code> ('transaction' or 'payment'), <code>event_date</code>, and <code>amount</code>. Transactions come through the accounts join; payments directly. Order by date.`,
+  hint:`Two SELECTs with matching column lists glued by UNION ALL, then one ORDER BY at the end. Literal strings make the event_type column.`,
+  sol:`SELECT 'transaction' AS event_type, t.transaction_date AS event_date, t.amount\nFROM accounts a\nJOIN transactions t ON t.account_id = a.account_id\nWHERE a.customer_id = 1\nUNION ALL\nSELECT 'payment', payment_date, amount\nFROM payments\nWHERE customer_id = 1\nORDER BY event_date;`,order:true,tolerant:true},
+ {topic:'Bonus drills (mixed difficulty)',title:'B12: Second-largest per account',
+  prompt:`For each account with at least 2 transactions, return <code>account_id</code> and the amount of its SECOND-largest transaction. Break amount ties by lower transaction_id first.`,
+  hint:'Same ROW_NUMBER pattern as top-1, but keep rn = 2. Accounts with fewer than 2 transactions drop out naturally.',
+  sol:`SELECT account_id, amount AS second_largest\nFROM (\n  SELECT t.*, ROW_NUMBER() OVER (PARTITION BY account_id\n                                 ORDER BY amount DESC, transaction_id) AS rn\n  FROM transactions t\n) x\nWHERE rn = 2;`,order:false},
+
+ {topic:'Servicing and risk analytics',title:'N1: Payment gap report',
+  prompt:`Servicing teams track how long since each customer last paid. Using 2026-06-30 as "today": return <code>customer_id</code>, their latest <code>payment_date</code>, and <code>days_since</code> for customers whose most recent payment is MORE than 45 days old. <em>Days-since-last-activity reports are bread and butter in servicing analytics.</em>`,
+  hint:'Group payments by customer, take MAX(payment_date), compute DATEDIFF against 2026-06-30, filter in HAVING. A customer at exactly 45 days does not qualify.',
+  sol:`SELECT customer_id,\n       MAX(payment_date) AS last_payment,\n       DATEDIFF('2026-06-30', MAX(payment_date)) AS days_since\nFROM payments\nGROUP BY customer_id\nHAVING DATEDIFF('2026-06-30', MAX(payment_date)) > 45;`,order:false},
+ {topic:'Servicing and risk analytics',title:'N2: KYC completeness report',
+  prompt:`Build a data-quality exceptions report with columns <code>customer_id</code>, <code>name</code>, <code>issue_type</code>. One row per issue: 'missing_score' for customers with a NULL credit score, and 'no_account' for customers with no accounts. A customer with both issues appears twice. <em>KYC work is largely finding exactly these gaps.</em>`,
+  hint:'Two SELECTs with a literal issue_type column, glued with UNION ALL. The second one is the anti-join pattern.',
+  sol:`SELECT customer_id, name, 'missing_score' AS issue_type\nFROM customers\nWHERE credit_score IS NULL\nUNION ALL\nSELECT c.customer_id, c.name, 'no_account' AS issue_type\nFROM customers c\nLEFT JOIN accounts a ON a.customer_id = c.customer_id\nWHERE a.account_id IS NULL;`,order:false},
+ {topic:'Servicing and risk analytics',title:'N3: Payer retention March to April',
+  prompt:`Of the customers who made a payment in March 2026, what percent also made a payment in April 2026? Return one number rounded to 1 decimal, aliased <code>retention_pct</code>. <em>Month-over-month retention is a core loss-mitigation and servicing metric.</em>`,
+  hint:'CTE of distinct March payers. Then 100.0 * count of those who appear among distinct April payers / count of March payers. An IN subquery inside a CASE works well.',
+  sol:`WITH mar AS (\n  SELECT DISTINCT customer_id FROM payments\n  WHERE payment_date BETWEEN '2026-03-01' AND '2026-03-31'\n),\napr AS (\n  SELECT DISTINCT customer_id FROM payments\n  WHERE payment_date BETWEEN '2026-04-01' AND '2026-04-30'\n)\nSELECT ROUND(100.0 * SUM(CASE WHEN m.customer_id IN (SELECT customer_id FROM apr)\n                              THEN 1 ELSE 0 END) / COUNT(*), 1) AS retention_pct\nFROM mar m;`,order:false},
+ {topic:'Servicing and risk analytics',title:'N4: Exposure by account status',
+  prompt:`Return each account <code>status</code>, the total <code>credit_limit</code> in that status, and its percent of all credit limit, rounded to 1 decimal (<code>pct_of_exposure</code>). <em>"How much exposure sits in each bucket" is the first question in any loss conversation.</em>`,
+  hint:'GROUP BY status; for the percent, divide by SUM(SUM(credit_limit)) OVER () - a window over an aggregate - or use a scalar subquery.',
+  sol:`SELECT status,\n       SUM(credit_limit) AS total_limit,\n       ROUND(100.0 * SUM(credit_limit) / SUM(SUM(credit_limit)) OVER (), 1) AS pct_of_exposure\nFROM accounts\nGROUP BY status;`,order:false},
+ {topic:'Servicing and risk analytics',title:'N5: Payment cadence',
+  prompt:`For each customer with at least 2 payments, return <code>customer_id</code> and their average number of days between consecutive payments, rounded to 1 decimal (<code>avg_gap_days</code>). <em>Payment cadence changes are an early delinquency signal.</em>`,
+  hint:'LAG(payment_date) per customer ordered by date in a CTE, DATEDIFF current vs previous, then AVG per customer (the first payment has a NULL gap and AVG skips it). HAVING COUNT filters the 1-payment customers.',
+  sol:`WITH gaps AS (\n  SELECT customer_id,\n         DATEDIFF(payment_date,\n                  LAG(payment_date) OVER (PARTITION BY customer_id\n                                          ORDER BY payment_date, payment_id)) AS gap\n  FROM payments\n)\nSELECT customer_id, ROUND(AVG(gap), 1) AS avg_gap_days\nFROM gaps\nGROUP BY customer_id\nHAVING COUNT(*) >= 2;`,order:false},
+ {topic:'Servicing and risk analytics',title:'N6: High-risk flag list',
+  prompt:`Return the <code>name</code> of customers with a credit score below 650 who ALSO have at least one closed account. <em>Combining a risk attribute with a behavior attribute is the standard segmentation shape.</em>`,
+  hint:'Join customers to accounts, filter score < 650 (NULL scores fail this comparison, which is correct here) and status = closed. DISTINCT in case of multiple closed accounts.',
+  sol:`SELECT DISTINCT c.name\nFROM customers c\nJOIN accounts a ON a.customer_id = c.customer_id\nWHERE c.credit_score < 650\n  AND a.status = 'closed';`,order:false},
+ {topic:'Servicing and risk analytics',title:'N7: Pareto of spend',
+  prompt:`Rank merchant categories by total spend (highest first) and add a running cumulative percent of all spend, rounded to 1 decimal (<code>cum_pct</code>). Return category, total spend rounded to 2 decimals, and cum_pct. <em>The "which categories make up 80% of volume" Pareto view is a senior-analyst staple.</em>`,
+  hint:'Aggregate per category in a CTE, then SUM(spend) OVER (ORDER BY spend DESC) / SUM(spend) OVER () - a running window divided by a full window.',
+  sol:`WITH cat AS (\n  SELECT merchant_category, SUM(amount) AS spend\n  FROM transactions\n  GROUP BY merchant_category\n)\nSELECT merchant_category, ROUND(spend, 2) AS spend,\n       ROUND(100.0 * SUM(spend) OVER (ORDER BY spend DESC)\n             / SUM(spend) OVER (), 1) AS cum_pct\nFROM cat\nORDER BY spend DESC;`,order:true},
+ {topic:'Servicing and risk analytics',title:'N8: Cash share by month',
+  prompt:`For each month (<code>YYYY-MM</code>) of payments, return the percent of payment DOLLARS that came in as cash, rounded to 1 decimal (<code>cash_pct</code>), in chronological order. <em>Payment-mix shifts are a servicing health indicator.</em>`,
+  hint:'Conditional aggregation inside a percent: SUM(CASE WHEN method = cash THEN amount ELSE 0 END) / SUM(amount), grouped by DATE_FORMAT month.',
+  sol:`SELECT DATE_FORMAT(payment_date, '%Y-%m') AS pay_month,\n       ROUND(100.0 * SUM(CASE WHEN method = 'cash' THEN amount ELSE 0 END)\n             / SUM(amount), 1) AS cash_pct\nFROM payments\nGROUP BY pay_month\nORDER BY pay_month;`,order:true},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T1: Second highest salary`,t100:true,
+  prompt:`Return the second highest distinct salary in <code>employees</code>, aliased <code>second_highest</code>.`,
+  hint:`MAX below MAX, or ORDER BY DESC LIMIT 1 OFFSET 1 on DISTINCT salaries.`,
+  sol:`SELECT MAX(salary) AS second_highest
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T2: RANK vs DENSE_RANK demo`,t100:true,
+  prompt:`For Engineering (department_id 1), return name, salary, RANK() and DENSE_RANK() by salary descending. Notice how the 95,000 tie affects each.`,
+  hint:`Two window functions side by side, same ORDER BY.`,
+  sol:`SELECT name, salary,
+       RANK()       OVER (ORDER BY salary DESC) AS rnk,
+       DENSE_RANK() OVER (ORDER BY salary DESC) AS drnk
+FROM employees
+WHERE department_id = 1;`,order:false,tolerant:true},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T3: Third highest distinct salary`,t100:true,
+  prompt:`Return the third highest DISTINCT salary using DENSE_RANK, aliased <code>third_highest</code>.`,
+  hint:`DENSE_RANK over distinct salaries in a subquery; keep rank 3.`,
+  sol:`SELECT salary AS third_highest
+FROM (
+  SELECT DISTINCT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS r
+  FROM employees
+) x
+WHERE r = 3;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T4: Fifth highest with LIMIT OFFSET`,t100:true,
+  prompt:`Return the 5th highest distinct salary using ORDER BY with LIMIT and OFFSET, aliased <code>fifth_highest</code>.`,
+  hint:`DISTINCT first, sort descending, skip 4, take 1.`,
+  sol:`SELECT DISTINCT salary AS fifth_highest
+FROM employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 4;`,order:true},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T5: Second highest per department, no windows`,t100:true,
+  prompt:`For each department_id, return the second highest DISTINCT salary WITHOUT window functions, aliased <code>second_sal</code>.`,
+  hint:`Per department: MAX(salary) below that departments MAX - a correlated subquery inside a grouped query.`,
+  sol:`SELECT department_id, MAX(salary) AS second_sal
+FROM employees e
+WHERE salary < (SELECT MAX(salary) FROM employees m
+                WHERE m.department_id = e.department_id)
+GROUP BY department_id;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T6: Top 3 products by quantity per category`,t100:true,
+  prompt:`Using order_items and products: return each categorys top 3 products by total quantity sold: category, product_name, total_qty. Break ties alphabetically by product name.`,
+  hint:`Aggregate per product in a CTE, ROW_NUMBER partitioned by category, keep rn <= 3.`,
+  sol:`WITH pq AS (
+  SELECT p.category, p.product_name, SUM(oi.quantity) AS total_qty
+  FROM order_items oi
+  JOIN products p ON p.product_id = oi.product_id
+  GROUP BY p.category, p.product_name
+)
+SELECT category, product_name, total_qty
+FROM (
+  SELECT pq.*, ROW_NUMBER() OVER (PARTITION BY category
+                                  ORDER BY total_qty DESC, product_name) AS rn
+  FROM pq
+) x
+WHERE rn <= 3;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T7: Top 5 paid per department`,t100:true,
+  prompt:`Return the top 5 highest paid employees per department: department_id, name, salary. Break salary ties by name.`,
+  hint:`ROW_NUMBER partitioned by department, rn <= 5.`,
+  sol:`SELECT department_id, name, salary
+FROM (
+  SELECT e.*, ROW_NUMBER() OVER (PARTITION BY department_id
+                                 ORDER BY salary DESC, name) AS rn
+  FROM employees e
+) x
+WHERE rn <= 5;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T8: Top 10 percent in department`,t100:true,
+  prompt:`Return name, department_id, salary of employees in the top 10 percent of salary WITHIN their department (PERCENT_RANK >= 0.9).`,
+  hint:`PERCENT_RANK() OVER (PARTITION BY dept ORDER BY salary) in a subquery; filter outside.`,
+  sol:`SELECT name, department_id, salary
+FROM (
+  SELECT e.*, PERCENT_RANK() OVER (PARTITION BY department_id
+                                   ORDER BY salary) AS pr
+  FROM employees e
+) x
+WHERE pr >= 0.9;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T9: Top 5 percent company-wide`,t100:true,
+  prompt:`Return name and salary of employees in the top 5 percent of salaries company-wide (PERCENT_RANK >= 0.95).`,
+  hint:`Same pattern without the PARTITION BY.`,
+  sol:`SELECT name, salary
+FROM (
+  SELECT name, salary, PERCENT_RANK() OVER (ORDER BY salary) AS pr
+  FROM employees
+) x
+WHERE pr >= 0.95;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T10: Second most expensive per category`,t100:true,
+  prompt:`Return each categorys second most expensive product: category, product_name, price.`,
+  hint:`ROW_NUMBER by price descending within category; keep rn = 2.`,
+  sol:`SELECT category, product_name, price
+FROM (
+  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY category
+                                 ORDER BY price DESC) AS rn
+  FROM products p
+) x
+WHERE rn = 2;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T11: Second most recent order per customer`,t100:true,
+  prompt:`For customers with 2+ orders: return customer_id and the order_date of their SECOND most recent order. Break same-date ties by higher order_id first.`,
+  hint:`ROW_NUMBER per customer ordered by date DESC, order_id DESC; keep rn = 2.`,
+  sol:`SELECT customer_id, order_date
+FROM (
+  SELECT o.*, ROW_NUMBER() OVER (PARTITION BY customer_id
+                                 ORDER BY order_date DESC, order_id DESC) AS rn
+  FROM orders o
+) x
+WHERE rn = 2;`,order:false},
+
+ {topic:`Top 100 - Ranking and Top-N`,title:`T12: Highest paid employee per department`,t100:true,
+  prompt:`Return department_id, name, salary of the employee(s) earning the department maximum (include both if tied).`,
+  hint:`RANK (not ROW_NUMBER) so ties both appear, or a correlated MAX comparison.`,
+  sol:`SELECT department_id, name, salary
+FROM (
+  SELECT e.*, RANK() OVER (PARTITION BY department_id
+                           ORDER BY salary DESC) AS r
+  FROM employees e
+) x
+WHERE r = 1;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T13: Earn more than their manager`,t100:true,
+  prompt:`Return employee name, their salary, manager name, manager salary for employees earning strictly more than their manager.`,
+  hint:`Self-join employees to employees on manager_id = emp_id.`,
+  sol:`SELECT e.name AS employee, e.salary,
+       m.name AS manager, m.salary AS manager_salary
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id
+WHERE e.salary > m.salary;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T14: Same salary as their manager`,t100:true,
+  prompt:`Return the names of employees whose salary equals their managers salary.`,
+  hint:`Same self-join, equality condition.`,
+  sol:`SELECT e.name
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id
+WHERE e.salary = m.salary;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T15: Employee and manager names`,t100:true,
+  prompt:`Return each employees name and their managers name (employees with no manager excluded), aliased <code>employee</code> and <code>manager</code>.`,
+  hint:`Plain INNER self-join.`,
+  sol:`SELECT e.name AS employee, m.name AS manager
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T16: Hired before their manager`,t100:true,
+  prompt:`Return employee name, their hire_date, manager name, manager hire_date for employees hired BEFORE their manager.`,
+  hint:`Self-join and compare hire dates.`,
+  sol:`SELECT e.name AS employee, e.hire_date,
+       m.name AS manager, m.hire_date AS manager_hire
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id
+WHERE e.hire_date < m.hire_date;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T17: Salary gap to manager`,t100:true,
+  prompt:`Return employee name, salary, and the difference manager_salary - employee_salary aliased <code>gap_to_manager</code> for all employees with a manager.`,
+  hint:`Self-join; subtraction in SELECT.`,
+  sol:`SELECT e.name, e.salary,
+       m.salary - e.salary AS gap_to_manager
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T18: Earn more than all subordinates`,t100:true,
+  prompt:`Return the names of managers (anyone with at least one report) who earn strictly more than EVERY one of their direct reports.`,
+  hint:`Join manager to reports, group by manager, HAVING manager salary > MAX(report salary).`,
+  sol:`SELECT m.name
+FROM employees m
+JOIN employees e ON e.manager_id = m.emp_id
+GROUP BY m.emp_id, m.name, m.salary
+HAVING m.salary > MAX(e.salary);`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T19: Same-department pairs`,t100:true,
+  prompt:`Return every pair of employees in the same department: name_a, name_b, department_id, each pair once, no self-pairs.`,
+  hint:`Self-join on department with a.emp_id < b.emp_id.`,
+  sol:`SELECT a.name AS name_a, b.name AS name_b, a.department_id
+FROM employees a
+JOIN employees b ON b.department_id = a.department_id
+               AND a.emp_id < b.emp_id;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T20: Most direct reports`,t100:true,
+  prompt:`Return the manager name with the most direct reports, and the count. Break ties alphabetically.`,
+  hint:`Join reports to managers, GROUP BY manager, ORDER BY count DESC LIMIT 1.`,
+  sol:`SELECT m.name, COUNT(*) AS reports
+FROM employees e
+JOIN employees m ON m.emp_id = e.manager_id
+GROUP BY m.emp_id, m.name
+ORDER BY reports DESC, m.name
+LIMIT 1;`,order:true},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T21: Managers managing no one`,t100:true,
+  prompt:`Return the names of employees with job_title = <code>Manager</code> to whom NO other employee reports.`,
+  hint:`Anti-join: LEFT JOIN reports and keep NULLs, or NOT EXISTS.`,
+  sol:`SELECT m.name
+FROM employees m
+LEFT JOIN employees e ON e.manager_id = m.emp_id
+WHERE m.job_title = 'Manager'
+  AND e.emp_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Joins and self-joins`,title:`T22: Most common product pairs`,t100:true,
+  prompt:`Using order_items: return pairs of product_ids that appear together in the same order, with how many orders they co-occur in, most frequent first (break ties by the pair ids). Each pair once (a < b).`,
+  hint:`Self-join order_items on order_id with a.product_id < b.product_id, then GROUP BY the pair.`,
+  sol:`SELECT a.product_id AS prod_a, b.product_id AS prod_b, COUNT(*) AS together
+FROM order_items a
+JOIN order_items b ON b.order_id = a.order_id
+                  AND a.product_id < b.product_id
+GROUP BY a.product_id, b.product_id
+ORDER BY together DESC, prod_a, prod_b;`,order:true},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T23: Departments with no employees`,t100:true,
+  prompt:`Return department_name of departments that have no employees.`,
+  hint:`LEFT JOIN employees, keep the NULL side.`,
+  sol:`SELECT d.department_name
+FROM departments d
+LEFT JOIN employees e ON e.department_id = d.department_id
+WHERE e.emp_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T24: Customers with no orders`,t100:true,
+  prompt:`Return the names of customers who have never placed an order.`,
+  hint:`LEFT JOIN orders on customer_id; IS NULL filter.`,
+  sol:`SELECT c.name
+FROM customers c
+LEFT JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.order_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T25: Products never sold (LEFT JOIN)`,t100:true,
+  prompt:`Return product_name of products with no rows in order_items, using the LEFT JOIN pattern.`,
+  hint:`LEFT JOIN order_items; WHERE item is NULL.`,
+  sol:`SELECT p.product_name
+FROM products p
+LEFT JOIN order_items oi ON oi.product_id = p.product_id
+WHERE oi.item_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T26: Products never sold (NOT EXISTS)`,t100:true,
+  prompt:`Same result as the previous question, but written with NOT EXISTS instead of a LEFT JOIN.`,
+  hint:`Correlated NOT EXISTS subquery on order_items.`,
+  sol:`SELECT p.product_name
+FROM products p
+WHERE NOT EXISTS (
+  SELECT 1 FROM order_items oi
+  WHERE oi.product_id = p.product_id
+);`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T27: Sales reps with no sales`,t100:true,
+  prompt:`Return the names of employees with job_title <code>Sales Rep</code> who appear as rep_id on ZERO orders.`,
+  hint:`Anti-join employees (filtered to reps) against orders.rep_id.`,
+  sol:`SELECT e.name
+FROM employees e
+LEFT JOIN orders o ON o.rep_id = e.emp_id
+WHERE e.job_title = 'Sales Rep'
+  AND o.order_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T28: Employees with no salary history`,t100:true,
+  prompt:`Return the names of employees with no rows in salary_history.`,
+  hint:`LEFT JOIN salary_history; IS NULL.`,
+  sol:`SELECT e.name
+FROM employees e
+LEFT JOIN salary_history sh ON sh.emp_id = e.emp_id
+WHERE sh.hist_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T29: Users who never logged in`,t100:true,
+  prompt:`Return the names of customers with no rows in logins (logins.user_id matches customers.customer_id).`,
+  hint:`Anti-join customers to logins.`,
+  sol:`SELECT c.name
+FROM customers c
+LEFT JOIN logins l ON l.user_id = c.customer_id
+WHERE l.login_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T30: Employees with no manager`,t100:true,
+  prompt:`Return the names of employees whose manager_id is NULL.`,
+  hint:`A simple IS NULL filter - no join needed.`,
+  sol:`SELECT name
+FROM employees
+WHERE manager_id IS NULL;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T31: Department headcounts including zero`,t100:true,
+  prompt:`Return every department_name with its employee count, INCLUDING departments with zero employees, largest first then name.`,
+  hint:`LEFT JOIN and COUNT the employee key (not COUNT(*)).`,
+  sol:`SELECT d.department_name, COUNT(e.emp_id) AS headcount
+FROM departments d
+LEFT JOIN employees e ON e.department_id = d.department_id
+GROUP BY d.department_id, d.department_name
+ORDER BY headcount DESC, d.department_name;`,order:true},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T32: Everyone plus manager, NULL-safe`,t100:true,
+  prompt:`Return every employees name and their managers name, showing NULL for those without a manager.`,
+  hint:`LEFT self-join instead of INNER.`,
+  sol:`SELECT e.name AS employee, m.name AS manager
+FROM employees e
+LEFT JOIN employees m ON m.emp_id = e.manager_id;`,order:false},
+
+ {topic:`Top 100 - Anti-joins and missing data`,title:`T33: Bought once, never reordered`,t100:true,
+  prompt:`Return customer_id and product_name for customer-product combinations purchased in EXACTLY one order.`,
+  hint:`Join orders to order_items, group by customer and product, HAVING COUNT(DISTINCT order_id) = 1.`,
+  sol:`SELECT o.customer_id, p.product_name
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY o.customer_id, p.product_id, p.product_name
+HAVING COUNT(DISTINCT o.order_id) = 1;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T34: Departments with more than 3 employees`,t100:true,
+  prompt:`Return department_id and employee count for departments with more than 3 employees.`,
+  hint:`GROUP BY plus HAVING COUNT(*).`,
+  sol:`SELECT department_id, COUNT(*) AS num_employees
+FROM employees
+GROUP BY department_id
+HAVING COUNT(*) > 3;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T35: Department with highest average salary`,t100:true,
+  prompt:`Return the department_id and average salary of the single department with the highest average salary.`,
+  hint:`GROUP BY, ORDER BY the average descending, LIMIT 1.`,
+  sol:`SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+ORDER BY avg_salary DESC
+LIMIT 1;`,order:true},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T36: Headcount per job title`,t100:true,
+  prompt:`Return each job_title and how many employees hold it.`,
+  hint:`Simple GROUP BY count.`,
+  sol:`SELECT job_title, COUNT(*) AS num_employees
+FROM employees
+GROUP BY job_title;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T37: Biggest department`,t100:true,
+  prompt:`Return the department_id with the most employees and the count.`,
+  hint:`GROUP BY, ORDER BY count DESC, LIMIT 1.`,
+  sol:`SELECT department_id, COUNT(*) AS headcount
+FROM employees
+GROUP BY department_id
+ORDER BY headcount DESC
+LIMIT 1;`,order:true},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T38: Average salary by department and title`,t100:true,
+  prompt:`Return department_id, job_title, and average salary for each combination.`,
+  hint:`GROUP BY two columns.`,
+  sol:`SELECT department_id, job_title, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id, job_title;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T39: Hires per year`,t100:true,
+  prompt:`Return each hire year and the number of employees hired that year, in year order.`,
+  hint:`GROUP BY YEAR(hire_date).`,
+  sol:`SELECT YEAR(hire_date) AS hire_year, COUNT(*) AS hires
+FROM employees
+GROUP BY hire_year
+ORDER BY hire_year;`,order:true},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T40: Departments beating the company average`,t100:true,
+  prompt:`Return department_id and average salary for departments whose average exceeds the overall company average.`,
+  hint:`Scalar subquery for the overall average inside HAVING.`,
+  sol:`SELECT department_id, AVG(salary) AS avg_salary
+FROM employees
+GROUP BY department_id
+HAVING AVG(salary) > (SELECT AVG(salary) FROM employees);`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T41: Majority earning above 70k`,t100:true,
+  prompt:`Return department_ids where MORE than 50 percent of employees earn above 70,000.`,
+  hint:`AVG of a CASE (1/0) gives the share directly; compare in HAVING.`,
+  sol:`SELECT department_id
+FROM employees
+GROUP BY department_id
+HAVING AVG(CASE WHEN salary > 70000 THEN 1.0 ELSE 0 END) > 0.5;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T42: Share of workforce per department`,t100:true,
+  prompt:`Return department_id, headcount, and its percent of all employees rounded to 1 decimal (<code>pct</code>).`,
+  hint:`Divide by a window SUM over the aggregate, or a scalar subquery COUNT.`,
+  sol:`SELECT department_id, COUNT(*) AS headcount,
+       ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS pct
+FROM employees
+GROUP BY department_id;`,order:false},
+
+ {topic:`Top 100 - Aggregation and HAVING`,title:`T43: Revenue and orders per city`,t100:true,
+  prompt:`Join orders to customers: return each city with total order amount and number of orders.`,
+  hint:`Two aggregates after one join, grouped by city.`,
+  sol:`SELECT c.city, SUM(o.amount) AS revenue, COUNT(*) AS num_orders
+FROM orders o
+JOIN customers c ON c.customer_id = o.customer_id
+GROUP BY c.city;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T44: Gender counts per department`,t100:true,
+  prompt:`Return department_id with two columns: males and females (counts), one row per department.`,
+  hint:`Two SUM(CASE WHEN gender = ... THEN 1 ELSE 0 END) columns.`,
+  sol:`SELECT department_id,
+       SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END) AS males,
+       SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END) AS females
+FROM employees
+GROUP BY department_id;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T45: Male to female ratio`,t100:true,
+  prompt:`Return department_id and the ratio males / females rounded to 2 decimals (<code>mf_ratio</code>). Use NULLIF so a zero-female department returns NULL instead of erroring.`,
+  hint:`Divide the two conditional sums; wrap the denominator in NULLIF(x, 0).`,
+  sol:`SELECT department_id,
+       ROUND(1.0 * SUM(CASE WHEN gender = 'M' THEN 1 ELSE 0 END)
+           / NULLIF(SUM(CASE WHEN gender = 'F' THEN 1 ELSE 0 END), 0), 2) AS mf_ratio
+FROM employees
+GROUP BY department_id;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T46: Pivot: monthly revenue per product`,t100:true,
+  prompt:`For 2026 Jan-Mar: return product_name with three columns jan_rev, feb_rev, mar_rev = SUM(quantity * price) in each month. Products with no 2026 Q1 sales excluded (INNER joins are fine).`,
+  hint:`Three SUM(CASE WHEN MONTH(...) = m THEN oi.quantity * p.price ELSE 0 END) columns.`,
+  sol:`SELECT p.product_name,
+       SUM(CASE WHEN MONTH(o.order_date) = 1 THEN oi.quantity * p.price ELSE 0 END) AS jan_rev,
+       SUM(CASE WHEN MONTH(o.order_date) = 2 THEN oi.quantity * p.price ELSE 0 END) AS feb_rev,
+       SUM(CASE WHEN MONTH(o.order_date) = 3 THEN oi.quantity * p.price ELSE 0 END) AS mar_rev
+FROM order_items oi
+JOIN orders o ON o.order_id = oi.order_id
+JOIN products p ON p.product_id = oi.product_id
+WHERE o.order_date BETWEEN '2026-01-01' AND '2026-03-31'
+GROUP BY p.product_id, p.product_name;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T47: Unpivot quarterly columns`,t100:true,
+  prompt:`You are given this wide CTE. Unpivot it into rows (product, quarter, revenue):<br><code>WITH wide AS (SELECT "AlphaPad" AS product, 100 AS q1, 200 AS q2, 150 AS q3, 300 AS q4)</code>`,
+  hint:`One SELECT per quarter with a literal quarter label, glued by UNION ALL.`,
+  sol:`WITH wide AS (SELECT 'AlphaPad' AS product, 100 AS q1, 200 AS q2, 150 AS q3, 300 AS q4)
+SELECT product, 'Q1' AS quarter, q1 AS revenue FROM wide
+UNION ALL SELECT product, 'Q2', q2 FROM wide
+UNION ALL SELECT product, 'Q3', q3 FROM wide
+UNION ALL SELECT product, 'Q4', q4 FROM wide;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T48: Weekend vs weekday orders`,t100:true,
+  prompt:`Return two columns in one row: weekend_orders and weekday_orders (counts) across all orders.`,
+  hint:`DAYNAME(order_date) IN (Saturday, Sunday) inside conditional sums.`,
+  sol:`SELECT SUM(CASE WHEN DAYNAME(order_date) IN ('Saturday','Sunday') THEN 1 ELSE 0 END) AS weekend_orders,
+       SUM(CASE WHEN DAYNAME(order_date) IN ('Saturday','Sunday') THEN 0 ELSE 1 END) AS weekday_orders
+FROM orders;`,order:false},
+
+ {topic:`Top 100 - Conditional aggregation and pivots`,title:`T49: Discounted share per month`,t100:true,
+  prompt:`For 2026 orders: return each month (YYYY-MM) and the percent of orders with discount > 0, rounded to 1 decimal, in month order.`,
+  hint:`Conditional count over total count, grouped by DATE_FORMAT month.`,
+  sol:`SELECT DATE_FORMAT(order_date, '%Y-%m') AS m,
+       ROUND(100.0 * SUM(CASE WHEN discount > 0 THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct_discounted
+FROM orders
+WHERE YEAR(order_date) = 2026
+GROUP BY m
+ORDER BY m;`,order:true},
+
+ {topic:`Top 100 - Window functions`,title:`T50: Running total of salaries by department`,t100:true,
+  prompt:`Return department_id, name, salary, and a running total of salary within the department ordered by salary descending then name.`,
+  hint:`SUM(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name).`,
+  sol:`SELECT department_id, name, salary,
+       SUM(salary) OVER (PARTITION BY department_id
+                         ORDER BY salary DESC, name) AS running_total
+FROM employees;`,order:false,tolerant:true},
+
+ {topic:`Top 100 - Window functions`,title:`T51: Running total of sales by date`,t100:true,
+  prompt:`Return each order_date with that days total amount and a running cumulative total across dates, in date order.`,
+  hint:`Daily totals in a CTE, then SUM OVER (ORDER BY date).`,
+  sol:`WITH daily AS (
+  SELECT order_date, SUM(amount) AS day_total
+  FROM orders GROUP BY order_date
+)
+SELECT order_date, day_total,
+       SUM(day_total) OVER (ORDER BY order_date) AS running_total
+FROM daily
+ORDER BY order_date;`,order:true},
+
+ {topic:`Top 100 - Window functions`,title:`T52: Salary delta vs previous hire`,t100:true,
+  prompt:`Order employees by hire_date: return name, hire_date, salary, and salary minus the previous hires salary (<code>delta_vs_prev</code>, NULL for the first).`,
+  hint:`LAG(salary) OVER (ORDER BY hire_date, emp_id).`,
+  sol:`SELECT name, hire_date, salary,
+       salary - LAG(salary) OVER (ORDER BY hire_date, emp_id) AS delta_vs_prev
+FROM employees;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T53: Moving average of last 3 salaries`,t100:true,
+  prompt:`Ordered by hire_date: return name, salary, and the average of this salary and the two hired just before, rounded to 0 decimals (<code>mov_avg_3</code>).`,
+  hint:`AVG(salary) OVER (ORDER BY hire_date, emp_id ROWS BETWEEN 2 PRECEDING AND CURRENT ROW).`,
+  sol:`SELECT name, salary,
+       ROUND(AVG(salary) OVER (ORDER BY hire_date, emp_id
+             ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 0) AS mov_avg_3
+FROM employees;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T54: Monthly rep ranking that resets`,t100:true,
+  prompt:`For 2026: return month (YYYY-MM), rep_id, that reps revenue, and their RANK within the month by revenue descending. The rank restarts every month.`,
+  hint:`GROUP BY month and rep; RANK() OVER (PARTITION BY month ORDER BY SUM(amount) DESC) - a window over an aggregate.`,
+  sol:`SELECT DATE_FORMAT(order_date, '%Y-%m') AS m, rep_id,
+       SUM(amount) AS revenue,
+       RANK() OVER (PARTITION BY DATE_FORMAT(order_date, '%Y-%m')
+                    ORDER BY SUM(amount) DESC) AS month_rank
+FROM orders
+WHERE YEAR(order_date) = 2026
+GROUP BY m, rep_id;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T55: Product revenue percent change by month`,t100:true,
+  prompt:`For product_id 9 (TrailShoes) in 2026: return month (YYYY-MM), revenue (quantity * price), and percent change vs the previous month rounded to 1 decimal (NULL for the first month), in month order.`,
+  hint:`Monthly revenue CTE, then LAG in the change formula.`,
+  sol:`WITH mrev AS (
+  SELECT DATE_FORMAT(o.order_date, '%Y-%m') AS m,
+         SUM(oi.quantity * p.price) AS revenue
+  FROM order_items oi
+  JOIN orders o ON o.order_id = oi.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE oi.product_id = 9 AND YEAR(o.order_date) = 2026
+  GROUP BY m
+)
+SELECT m, revenue,
+       ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY m))
+             / LAG(revenue) OVER (ORDER BY m), 1) AS pct_change
+FROM mrev
+ORDER BY m;`,order:true},
+
+ {topic:`Top 100 - Window functions`,title:`T56: Cumulative share of product revenue`,t100:true,
+  prompt:`Return product_name, revenue (quantity * price summed), and cumulative percent of total revenue when products are ranked by revenue descending, rounded to 1 decimal, highest first. Break revenue ties by product name.`,
+  hint:`Per-product CTE, then running SUM OVER (ORDER BY revenue DESC) divided by SUM OVER ().`,
+  sol:`WITH pr AS (
+  SELECT p.product_name, SUM(oi.quantity * p.price) AS revenue
+  FROM order_items oi
+  JOIN products p ON p.product_id = oi.product_id
+  GROUP BY p.product_id, p.product_name
+)
+SELECT product_name, revenue,
+       ROUND(100.0 * SUM(revenue) OVER (ORDER BY revenue DESC, product_name)
+             / SUM(revenue) OVER (), 1) AS cum_pct
+FROM pr
+ORDER BY revenue DESC, product_name;`,order:true},
+
+ {topic:`Top 100 - Window functions`,title:`T57: Percent rank within department`,t100:true,
+  prompt:`Return name, department_id, salary, and PERCENT_RANK by salary within the department rounded to 2 decimals.`,
+  hint:`PERCENT_RANK() OVER (PARTITION BY department_id ORDER BY salary).`,
+  sol:`SELECT name, department_id, salary,
+       ROUND(PERCENT_RANK() OVER (PARTITION BY department_id
+                                  ORDER BY salary), 2) AS pr
+FROM employees;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T58: Cumulative orders per customer`,t100:true,
+  prompt:`Return customer_id, order_date, order_id, and a running count of that customers orders so far (<code>order_no</code>), ordered within each customer by date then order_id.`,
+  hint:`ROW_NUMBER, or COUNT(*) OVER a growing frame - ROW_NUMBER is simplest.`,
+  sol:`SELECT customer_id, order_date, order_id,
+       ROW_NUMBER() OVER (PARTITION BY customer_id
+                          ORDER BY order_date, order_id) AS order_no
+FROM orders;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T59: Order amount vs previous order`,t100:true,
+  prompt:`Per customer ordered by date then order_id: return customer_id, order_date, amount, and amount minus their previous orders amount (<code>diff_vs_prev</code>, NULL for the first).`,
+  hint:`LAG(amount) partitioned by customer.`,
+  sol:`SELECT customer_id, order_date, amount,
+       amount - LAG(amount) OVER (PARTITION BY customer_id
+                                  ORDER BY order_date, order_id) AS diff_vs_prev
+FROM orders;`,order:false},
+
+ {topic:`Top 100 - Window functions`,title:`T60: Repeat rate month over month`,t100:true,
+  prompt:`Using a month index YEAR*12+MONTH over 2026 orders: for each month, what percent of that months customers ALSO ordered the previous month? Return month_index and pct rounded to 1 decimal, in order.`,
+  hint:`Distinct customer-month CTE, LEFT self-join on customer and index-1, conditional count.`,
+  sol:`WITH cm AS (
+  SELECT DISTINCT customer_id,
+         YEAR(order_date) * 12 + MONTH(order_date) AS mi
+  FROM orders
+  WHERE order_date >= '2026-01-01'
+)
+SELECT a.mi AS month_index,
+       ROUND(100.0 * COUNT(b.customer_id) / COUNT(*), 1) AS pct_repeat
+FROM cm a
+LEFT JOIN cm b ON b.customer_id = a.customer_id AND b.mi = a.mi - 1
+GROUP BY a.mi
+ORDER BY a.mi;`,order:true},
+
+ {topic:`Top 100 - Window functions`,title:`T61: Latest order per customer (window)`,t100:true,
+  prompt:`Return the FULL row (customer_id, order_id, order_date, amount) of each customers most recent order. Break same-date ties by higher order_id.`,
+  hint:`ROW_NUMBER DESC per customer; rn = 1 outside.`,
+  sol:`SELECT customer_id, order_id, order_date, amount
+FROM (
+  SELECT o.*, ROW_NUMBER() OVER (PARTITION BY customer_id
+                                 ORDER BY order_date DESC, order_id DESC) AS rn
+  FROM orders o
+) x
+WHERE rn = 1;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T62: Hired in the last 6 months`,t100:true,
+  prompt:`Using 2026-06-30 as today: return name and hire_date of employees hired in the last 6 months.`,
+  hint:`hire_date >= DATE_SUB of the fixed date.`,
+  sol:`SELECT name, hire_date
+FROM employees
+WHERE hire_date >= DATE_SUB('2026-06-30', INTERVAL 6 MONTH);`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T63: First and last order per customer`,t100:true,
+  prompt:`Return customer_id, first order_date, last order_date for every customer with orders.`,
+  hint:`MIN and MAX in one grouped query.`,
+  sol:`SELECT customer_id,
+       MIN(order_date) AS first_order,
+       MAX(order_date) AS last_order
+FROM orders
+GROUP BY customer_id;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T64: First order only`,t100:true,
+  prompt:`Return customer_id and their earliest order_date (<code>first_order</code>).`,
+  hint:`MIN(order_date) per customer.`,
+  sol:`SELECT customer_id, MIN(order_date) AS first_order
+FROM orders
+GROUP BY customer_id;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T65: Most recent order (MAX version)`,t100:true,
+  prompt:`Return customer_id and their latest order_date using MAX (no window functions).`,
+  hint:`MAX(order_date) per customer.`,
+  sol:`SELECT customer_id, MAX(order_date) AS last_order
+FROM orders
+GROUP BY customer_id;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T66: Customer activity span`,t100:true,
+  prompt:`Return customer_id and the number of days between their first and last order (<code>span_days</code>).`,
+  hint:`DATEDIFF(MAX, MIN) grouped by customer.`,
+  sol:`SELECT customer_id,
+       DATEDIFF(MAX(order_date), MIN(order_date)) AS span_days
+FROM orders
+GROUP BY customer_id;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T67: Stale customers`,t100:true,
+  prompt:`Using 2026-06-30 as today: return customer_id and last order_date of customers whose LAST order is more than a year old.`,
+  hint:`MAX date per customer, HAVING it before the fixed date minus 1 year.`,
+  sol:`SELECT customer_id, MAX(order_date) AS last_order
+FROM orders
+GROUP BY customer_id
+HAVING MAX(order_date) < DATE_SUB('2026-06-30', INTERVAL 1 YEAR);`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T68: Average gap between orders`,t100:true,
+  prompt:`For customers with 2+ orders: return customer_id and the average days between consecutive orders rounded to 1 decimal (<code>avg_gap</code>).`,
+  hint:`LAG date per customer in a CTE, DATEDIFF, then AVG (NULL first-gap is skipped automatically).`,
+  sol:`WITH g AS (
+  SELECT customer_id,
+         DATEDIFF(order_date,
+                  LAG(order_date) OVER (PARTITION BY customer_id
+                                        ORDER BY order_date, order_id)) AS gap
+  FROM orders
+)
+SELECT customer_id, ROUND(AVG(gap), 1) AS avg_gap
+FROM g
+GROUP BY customer_id
+HAVING COUNT(*) >= 2;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T69: Longest gap between orders`,t100:true,
+  prompt:`For customers with 2+ orders: return customer_id and their LONGEST gap in days between consecutive orders (<code>max_gap</code>).`,
+  hint:`Same LAG CTE; MAX instead of AVG.`,
+  sol:`WITH g AS (
+  SELECT customer_id,
+         DATEDIFF(order_date,
+                  LAG(order_date) OVER (PARTITION BY customer_id
+                                        ORDER BY order_date, order_id)) AS gap
+  FROM orders
+)
+SELECT customer_id, MAX(gap) AS max_gap
+FROM g
+GROUP BY customer_id
+HAVING COUNT(*) >= 2;`,order:false},
+
+ {topic:`Top 100 - Dates and time`,title:`T70: Days from signup to first order`,t100:true,
+  prompt:`Join customers to orders: return each ordering customers name and the days between their signup_date and their first order (<code>days_to_first</code>).`,
+  hint:`MIN(order_date) per customer, DATEDIFF against signup_date.`,
+  sol:`SELECT c.name,
+       DATEDIFF(MIN(o.order_date), c.signup_date) AS days_to_first
+FROM customers c
+JOIN orders o ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name, c.signup_date;`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T71: Above company average`,t100:true,
+  prompt:`Return name and salary of employees earning more than the company average.`,
+  hint:`Scalar subquery in WHERE.`,
+  sol:`SELECT name, salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T72: Above department average (correlated)`,t100:true,
+  prompt:`Return name, department_id, salary of employees earning more than THEIR OWN departments average, using a correlated subquery.`,
+  hint:`The inner query references the outer rows department_id.`,
+  sol:`SELECT e.name, e.department_id, e.salary
+FROM employees e
+WHERE e.salary > (SELECT AVG(salary) FROM employees d
+                  WHERE d.department_id = e.department_id);`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T73: Above department, below company`,t100:true,
+  prompt:`Return name and salary of employees above their departments average but below the company average.`,
+  hint:`Two subqueries: one correlated, one scalar.`,
+  sol:`SELECT e.name, e.salary
+FROM employees e
+WHERE e.salary > (SELECT AVG(salary) FROM employees d
+                  WHERE d.department_id = e.department_id)
+  AND e.salary < (SELECT AVG(salary) FROM employees);`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T74: Spent above their city average`,t100:true,
+  prompt:`Per-customer total spend vs their citys average customer spend: return name, city, total_spend for customers strictly above their city average.`,
+  hint:`Per-customer totals CTE joined to customers, then a window AVG per city, filter outside.`,
+  sol:`WITH spend AS (
+  SELECT c.customer_id, c.name, c.city, SUM(o.amount) AS total_spend
+  FROM customers c
+  JOIN orders o ON o.customer_id = c.customer_id
+  GROUP BY c.customer_id, c.name, c.city
+)
+SELECT name, city, total_spend
+FROM (
+  SELECT s.*, AVG(total_spend) OVER (PARTITION BY city) AS city_avg
+  FROM spend s
+) x
+WHERE total_spend > city_avg;`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T75: Above everyone in Finance`,t100:true,
+  prompt:`Return name and salary of employees earning more than ALL employees in department_id 3.`,
+  hint:`Compare against the subquery MAX, or use > ALL.`,
+  sol:`SELECT name, salary
+FROM employees
+WHERE salary > (SELECT MAX(salary) FROM employees
+                WHERE department_id = 3);`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T76: Within 10 percent of the department max`,t100:true,
+  prompt:`Return name, department_id, salary of employees whose salary is at least 90 percent of their departments maximum.`,
+  hint:`Correlated MAX subquery times 0.9.`,
+  sol:`SELECT e.name, e.department_id, e.salary
+FROM employees e
+WHERE e.salary >= 0.9 * (SELECT MAX(salary) FROM employees d
+                         WHERE d.department_id = e.department_id);`,order:false},
+
+ {topic:`Top 100 - Above-average and subqueries`,title:`T77: Average excluding the top 5 percent`,t100:true,
+  prompt:`Return one number: the average order amount EXCLUDING the top 5 percent largest orders, rounded to 2 decimals (<code>trimmed_avg</code>).`,
+  hint:`PERCENT_RANK over amount in a subquery; average the rows with pr < 0.95.`,
+  sol:`SELECT ROUND(AVG(amount), 2) AS trimmed_avg
+FROM (
+  SELECT amount, PERCENT_RANK() OVER (ORDER BY amount) AS pr
+  FROM orders
+) x
+WHERE pr < 0.95;`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T78: Bought from every category`,t100:true,
+  prompt:`Return customer_ids that have purchased products from EVERY category in the products table.`,
+  hint:`Count distinct categories per customer; compare to total distinct categories via a scalar subquery in HAVING.`,
+  sol:`SELECT o.customer_id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY o.customer_id
+HAVING COUNT(DISTINCT p.category) = (SELECT COUNT(DISTINCT category) FROM products);`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T79: Bought all Grocery products`,t100:true,
+  prompt:`Return customer_ids that have purchased EVERY product in the Grocery category.`,
+  hint:`Filter to Grocery, count distinct products per customer, compare to the Grocery product count.`,
+  sol:`SELECT o.customer_id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+WHERE p.category = 'Grocery'
+GROUP BY o.customer_id
+HAVING COUNT(DISTINCT p.product_id) = (SELECT COUNT(*) FROM products WHERE category = 'Grocery');`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T80: Bought both AlphaPad and BetaPhone`,t100:true,
+  prompt:`Return customer_ids that have purchased BOTH product AlphaPad and product BetaPhone.`,
+  hint:`Filter to the two names, group by customer, HAVING COUNT(DISTINCT product) = 2.`,
+  sol:`SELECT o.customer_id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+WHERE p.product_name IN ('AlphaPad', 'BetaPhone')
+GROUP BY o.customer_id
+HAVING COUNT(DISTINCT p.product_name) = 2;`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T81: January but not February`,t100:true,
+  prompt:`Return customer_ids with at least one order in January 2026 but NONE in February 2026.`,
+  hint:`January set minus February set: IN plus NOT IN (or EXISTS / NOT EXISTS).`,
+  sol:`SELECT DISTINCT customer_id
+FROM orders
+WHERE order_date BETWEEN '2026-01-01' AND '2026-01-31'
+  AND customer_id NOT IN (
+    SELECT customer_id FROM orders
+    WHERE order_date BETWEEN '2026-02-01' AND '2026-02-28'
+  );`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T82: Ordered every month of 2026 H1`,t100:true,
+  prompt:`Return customer_ids that placed at least one order in EVERY month from January through June 2026.`,
+  hint:`Distinct months per customer in the window must equal 6.`,
+  sol:`SELECT customer_id
+FROM orders
+WHERE order_date BETWEEN '2026-01-01' AND '2026-06-30'
+GROUP BY customer_id
+HAVING COUNT(DISTINCT MONTH(order_date)) = 6;`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T83: Sold in every quarter of 2025`,t100:true,
+  prompt:`Return product_names sold (via order_items) in ALL four quarters of 2025.`,
+  hint:`QUARTER(order_date) distinct count = 4 per product.`,
+  sol:`SELECT p.product_name
+FROM order_items oi
+JOIN orders o ON o.order_id = oi.order_id
+JOIN products p ON p.product_id = oi.product_id
+WHERE YEAR(o.order_date) = 2025
+GROUP BY p.product_id, p.product_name
+HAVING COUNT(DISTINCT QUARTER(o.order_date)) = 4;`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T84: At least 3 categories`,t100:true,
+  prompt:`Return customer_ids that purchased from at least 3 different categories.`,
+  hint:`COUNT(DISTINCT category) >= 3 in HAVING.`,
+  sol:`SELECT o.customer_id
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY o.customer_id
+HAVING COUNT(DISTINCT p.category) >= 3;`,order:false},
+
+ {topic:`Top 100 - Membership and set logic`,title:`T85: Product bought by every buyer`,t100:true,
+  prompt:`Return product_names purchased by EVERY customer who has ever placed an order (relational division).`,
+  hint:`Distinct buyers per product must equal the count of distinct ordering customers.`,
+  sol:`SELECT p.product_name
+FROM order_items oi
+JOIN orders o ON o.order_id = oi.order_id
+JOIN products p ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name
+HAVING COUNT(DISTINCT o.customer_id) = (SELECT COUNT(DISTINCT customer_id) FROM orders);`,order:false},
+
+ {topic:`Top 100 - Gaps, islands and streaks`,title:`T86: Longest login streak per user`,t100:true,
+  prompt:`Return user_id and the length of their longest run of CONSECUTIVE daily logins (<code>longest_streak</code>).`,
+  hint:`Gaps-and-islands: date minus ROW_NUMBER (as a day index via DATEDIFF from a fixed date) is constant within a streak.`,
+  sol:`WITH d AS (
+  SELECT DISTINCT user_id, login_date,
+         DATEDIFF(login_date, '2026-01-01') AS di
+  FROM logins
+),
+runs AS (
+  SELECT user_id,
+         di - ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY di) AS grp
+  FROM d
+)
+SELECT user_id, MAX(cnt) AS longest_streak
+FROM (SELECT user_id, grp, COUNT(*) AS cnt FROM runs GROUP BY user_id, grp) x
+GROUP BY user_id;`,order:false},
+
+ {topic:`Top 100 - Gaps, islands and streaks`,title:`T87: Gaps in the order_id sequence`,t100:true,
+  prompt:`Return each order_id that has NO order_id + 1 following it, excluding the maximum id - these mark where gaps start.`,
+  hint:`Self anti-join: LEFT JOIN orders b ON b.order_id = a.order_id + 1, keep NULLs, exclude MAX.`,
+  sol:`SELECT a.order_id AS gap_after
+FROM orders a
+LEFT JOIN orders b ON b.order_id = a.order_id + 1
+WHERE b.order_id IS NULL
+  AND a.order_id < (SELECT MAX(order_id) FROM orders);`,order:false},
+
+ {topic:`Top 100 - Gaps, islands and streaks`,title:`T88: Login gap starters`,t100:true,
+  prompt:`Return user_id and login_date for logins where the user did NOT log in the next calendar day (excluding each users final login).`,
+  hint:`Anti self-join on user and date + 1 day; exclude the per-user MAX date.`,
+  sol:`SELECT a.user_id, a.login_date
+FROM logins a
+LEFT JOIN logins b ON b.user_id = a.user_id
+                  AND b.login_date = DATE_ADD(a.login_date, INTERVAL 1 DAY)
+WHERE b.login_id IS NULL
+  AND a.login_date < (SELECT MAX(login_date) FROM logins m WHERE m.user_id = a.user_id);`,order:false},
+
+ {topic:`Top 100 - Gaps, islands and streaks`,title:`T89: Consecutive 500-plus days`,t100:true,
+  prompt:`Return pairs of CONSECUTIVE calendar dates (day1, day2) where the total order amount exceeded 500 on BOTH days.`,
+  hint:`Daily totals CTE, self-join day to day + 1, both totals > 500.`,
+  sol:`WITH daily AS (
+  SELECT order_date, SUM(amount) AS total
+  FROM orders GROUP BY order_date
+)
+SELECT a.order_date AS day1, b.order_date AS day2
+FROM daily a
+JOIN daily b ON b.order_date = DATE_ADD(a.order_date, INTERVAL 1 DAY)
+WHERE a.total > 500 AND b.total > 500;`,order:false},
+
+ {topic:`Top 100 - Gaps, islands and streaks`,title:`T90: Three months of rising revenue`,t100:true,
+  prompt:`Return product_ids whose monthly revenue (quantity * price) rose in BOTH month-over-month steps across 2026 Jan, Feb, Mar.`,
+  hint:`Monthly revenue CTE, LAG twice (or LAG at offsets 1 and 2), keep rows where curr > prev > prev2 in March.`,
+  sol:`WITH mrev AS (
+  SELECT oi.product_id, MONTH(o.order_date) AS m,
+         SUM(oi.quantity * p.price) AS rev
+  FROM order_items oi
+  JOIN orders o ON o.order_id = oi.order_id
+  JOIN products p ON p.product_id = oi.product_id
+  WHERE o.order_date BETWEEN '2026-01-01' AND '2026-03-31'
+  GROUP BY oi.product_id, m
+),
+lagged AS (
+  SELECT product_id, m, rev,
+         LAG(rev, 1) OVER (PARTITION BY product_id ORDER BY m) AS prev1,
+         LAG(rev, 2) OVER (PARTITION BY product_id ORDER BY m) AS prev2
+  FROM mrev
+)
+SELECT product_id
+FROM lagged
+WHERE m = 3 AND rev > prev1 AND prev1 > prev2;`,order:false},
+
+ {topic:`Top 100 - Duplicates and data quality`,title:`T91: Duplicate employee names`,t100:true,
+  prompt:`Return each name appearing more than once in employees, with its count.`,
+  hint:`GROUP BY name, HAVING COUNT(*) > 1.`,
+  sol:`SELECT name, COUNT(*) AS occurrences
+FROM employees
+GROUP BY name
+HAVING COUNT(*) > 1;`,order:false},
+
+ {topic:`Top 100 - Duplicates and data quality`,title:`T92: Duplicate orders on multiple columns`,t100:true,
+  prompt:`Return customer_id, order_date, amount combinations appearing in MORE than one order, with counts.`,
+  hint:`GROUP BY all three, HAVING COUNT(*) > 1.`,
+  sol:`SELECT customer_id, order_date, amount, COUNT(*) AS occurrences
+FROM orders
+GROUP BY customer_id, order_date, amount
+HAVING COUNT(*) > 1;`,order:false},
+
+ {topic:`Top 100 - Duplicates and data quality`,title:`T93: Multiple orders same day`,t100:true,
+  prompt:`Return customer_id and order_date where a customer placed MORE than one order that day, with the count.`,
+  hint:`GROUP BY customer and date; HAVING count > 1.`,
+  sol:`SELECT customer_id, order_date, COUNT(*) AS orders_that_day
+FROM orders
+GROUP BY customer_id, order_date
+HAVING COUNT(*) > 1;`,order:false},
+
+ {topic:`Top 100 - Duplicates and data quality`,title:`T94: Same product twice in one day`,t100:true,
+  prompt:`Return customer_id, product_id, order_date where the same customer bought the same product in MORE than one order on the same date.`,
+  hint:`Join orders to order_items; group by customer, product, date; HAVING COUNT(DISTINCT order_id) > 1.`,
+  sol:`SELECT o.customer_id, oi.product_id, o.order_date
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+GROUP BY o.customer_id, oi.product_id, o.order_date
+HAVING COUNT(DISTINCT o.order_id) > 1;`,order:false},
+
+ {topic:`Top 100 - Duplicates and data quality`,title:`T95: Diff two tables both ways`,t100:true,
+  prompt:`Compare employees to employees_archive: return emp_id, name, and a <code>side</code> column (<code>live_only</code> or <code>archive_only</code>) for rows whose FULL column set does not match the other table. Changed rows appear on both sides; missing or extra rows on one.`,
+  hint:`Two anti-joins matching on every column, glued with UNION ALL. NOT EXISTS with all columns compared is cleanest.`,
+  sol:`SELECT e.emp_id, e.name, 'live_only' AS side
+FROM employees e
+WHERE NOT EXISTS (
+  SELECT 1 FROM employees_archive a
+  WHERE a.emp_id = e.emp_id AND a.name = e.name
+    AND a.department_id = e.department_id
+    AND COALESCE(a.manager_id, -1) = COALESCE(e.manager_id, -1)
+    AND a.salary = e.salary AND a.hire_date = e.hire_date
+    AND a.job_title = e.job_title AND a.gender = e.gender
+)
+UNION ALL
+SELECT a.emp_id, a.name, 'archive_only'
+FROM employees_archive a
+WHERE NOT EXISTS (
+  SELECT 1 FROM employees e
+  WHERE e.emp_id = a.emp_id AND e.name = a.name
+    AND e.department_id = a.department_id
+    AND COALESCE(e.manager_id, -1) = COALESCE(a.manager_id, -1)
+    AND e.salary = a.salary AND e.hire_date = a.hire_date
+    AND e.job_title = a.job_title AND e.gender = a.gender
+);`,order:false},
+
+ {topic:`Top 100 - Advanced and misc`,title:`T96: Median salary without percentile functions`,t100:true,
+  prompt:`Return the median employee salary (<code>median_salary</code>) using ROW_NUMBER and COUNT - no percentile functions.`,
+  hint:`Number the sorted rows, count them in the same window, average the middle one or two: rn IN ((c+1)/2, (c+2)/2).`,
+  sol:`WITH ranked AS (
+  SELECT salary,
+         ROW_NUMBER() OVER (ORDER BY salary) AS rn,
+         COUNT(*) OVER () AS c
+  FROM employees
+)
+SELECT AVG(salary) AS median_salary
+FROM ranked
+WHERE rn IN ((c + 1) / 2, (c + 2) / 2);`,order:false},
+
+ {topic:`Top 100 - Advanced and misc`,title:`T97: Recursive reporting chain`,t100:true,
+  prompt:`Return the management chain of Jack Cole up to the CEO: name and level (1 = Jack himself), in level order.`,
+  hint:`WITH RECURSIVE: anchor is Jack; each step joins the current persons manager_id to emp_id.`,
+  sol:`WITH RECURSIVE chain AS (
+  SELECT emp_id, name, manager_id, 1 AS lvl
+  FROM employees WHERE name = 'Jack Cole'
+  UNION ALL
+  SELECT e.emp_id, e.name, e.manager_id, c.lvl + 1
+  FROM employees e
+  JOIN chain c ON e.emp_id = c.manager_id
+)
+SELECT name, lvl FROM chain ORDER BY lvl;`,order:true},
+
+ {topic:`Top 100 - Advanced and misc`,title:`T98: Overlapping bookings`,t100:true,
+  prompt:`Return pairs of booking_ids in the SAME room whose date ranges overlap (a.start <= b.end AND b.start <= a.end). Each pair once (a.id < b.id).`,
+  hint:`Self-join on room with the two-inequality overlap test.`,
+  sol:`SELECT a.booking_id AS booking_a, b.booking_id AS booking_b, a.room_id
+FROM bookings a
+JOIN bookings b ON b.room_id = a.room_id
+              AND a.booking_id < b.booking_id
+WHERE a.start_date <= b.end_date
+  AND b.start_date <= a.end_date;`,order:false},
+
+ {topic:`Top 100 - Advanced and misc`,title:`T99: Names per department (GROUP_CONCAT)`,t100:true,
+  prompt:`Return department_id and all employee names in it as one comma-separated string (<code>members</code>).`,
+  hint:`GROUP_CONCAT(name) - MySQLs string aggregation.`,
+  sol:`SELECT department_id, GROUP_CONCAT(name) AS members
+FROM employees
+GROUP BY department_id;`,order:false,tolerant:true},
+
+ {topic:`Top 100 - Advanced and misc`,title:`T100: First letter equals last letter`,t100:true,
+  prompt:`Return employee names whose first and last letters match, case-insensitively.`,
+  hint:`Compare LOWER(SUBSTR(name, 1, 1)) with LOWER(SUBSTR(name, -1)) - a negative SUBSTR start reads from the end, and unlike LEFT it is not a reserved word in this engine.`,
+  sol:`SELECT name
+FROM employees
+WHERE LOWER(SUBSTR(name, 1, 1)) = LOWER(SUBSTR(name, -1));`,order:false}
+];
+
+/* ---------- rendering helpers ---------- */
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderResult(res,limit){
+  if(!res.length) return `<div class="mysql-line">Query OK, 0 rows returned (Empty set)</div>`;
+  const {columns,values,truncated}=res[0];
+  const rows=limit?values.slice(0,limit):values;
+  const countLabel = truncated ? `first ${values.length}+ rows (result capped - add a LIMIT or tighten your filters)` : `${values.length} row${values.length===1?'':'s'} in set${limit&&values.length>limit?` (showing first ${limit})`:''}`;
+  let h=`<div class="mysql-line">${countLabel}</div><div class="tblwrap"><table class="res"><thead><tr>`;
+  columns.forEach(c=>h+=`<th>${esc(c)}</th>`);h+='</tr></thead><tbody>';
+  rows.forEach(r=>{h+='<tr>';r.forEach(v=>{
+    if(v===null)h+='<td class="nullv">NULL</td>';
+    else h+=`<td>${esc(typeof v==='number'&&!Number.isInteger(v)?Math.round(v*100)/100:v)}</td>`;
+  });h+='</tr>';});
+  return h+'</tbody></table></div>';
+}
+function normalize(res,order){
+  if(!res.length)return JSON.stringify([]);
+  const rows=res[0].values.map(r=>r.map(v=>v===null?'\u2400NULL':(typeof v==='number'?String(Math.round(v*100)/100):String(v))));
+  const strs=rows.map(r=>r.join('\u0001'));
+  if(!order)strs.sort();
+  return JSON.stringify(strs);
+}
+
+/* ---------- practice tab ---------- */
+function buildList(){
+  const el=$('qlist');el.innerHTML='';let lastTopic='';
+  QUESTIONS.forEach((q,i)=>{
+    if(q.topic!==lastTopic){el.insertAdjacentHTML('beforeend',`<div class="topic-h">${q.topic}</div>`);lastTopic=q.topic;}
+    el.insertAdjacentHTML('beforeend',
+      `<button class="qbtn${solved.has(i)?' done':''}${i===currentQ?' sel':''}" data-q="${i}"><span class="dot"></span><span>${i+1}. ${q.title}</span>${q.fresh?'<span class="newtag">NEW</span>':(q.t100?'<span class="newtag" style="background:var(--teal);color:#fff">100</span>':'')}</button>`);
+  });
+  el.querySelectorAll('.qbtn').forEach(b=>b.onclick=()=>selectQ(+b.dataset.q));
+  $('progressPill').textContent=`${solved.size} / ${QUESTIONS.length} solved`;
+  applyQFilter();
+}
+function applyQFilter(){
+  const inp=$('qSearch'); if(!inp) return;
+  const q=inp.value.trim().toLowerCase();
+  const list=$('qlist');
+  list.querySelectorAll('.qbtn').forEach(b=>{
+    b.style.display = !q || b.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+  list.querySelectorAll('.topic-h').forEach(h=>{
+    let sib=h.nextElementSibling, any=false;
+    while(sib && !sib.classList.contains('topic-h')){ if(sib.style.display!=='none') any=true; sib=sib.nextElementSibling; }
+    h.style.display=any?'':'none';
+  });
+}
+function selectQ(i){
+  currentQ=i;const q=QUESTIONS[i];
+  $('qTopic').textContent=q.topic + (q.fresh ? '  -  NEWLY ADDED' : '');
+  $('qTitle').textContent=`${i+1}. ${q.title}`;
+  $('qPrompt').innerHTML=q.prompt;
+  $('hintBox').textContent='Hint: '+q.hint;$('hintBox').classList.remove('show');
+  $('solPre').textContent=q.sol;$('solBox').classList.remove('show');
+  $('pEditor').value=answers[i]||'';$('pOut').innerHTML='';
+  buildList();
+}
+function limitMsg(){
+  return '<div class="errbox">ERROR: query aborted (safety limit).\nIt was still producing rows after 4 seconds, which almost always means an accidental CROSS JOIN.\nCheck: 1) every JOIN has an ON condition, 2) no comma-separated tables in FROM, 3) your WHERE filters actually reference the joined tables.</div>';
+}
+function doRun(editor,out){
+  const sql=$(editor).value.trim();
+  if(!sql){$(out).innerHTML='<div class="warnbox">Write a query first, then press Run.</div>';return null;}
+  try{const res=runSQL(sql,500,4000);$(out).innerHTML=renderResult(res,200);return res;}
+  catch(e){$(out).innerHTML=e.qlimit?limitMsg():`<div class="errbox">${esc(mysqlError(e.message,sql))}</div>`;return null;}
+}
+$('pRun').onclick=()=>doRun('pEditor','pOut');
+$('sRun').onclick=()=>doRun('sEditor','sOut');
+$('pCheck').onclick=()=>{
+  const q=QUESTIONS[currentQ];const sql=$('pEditor').value.trim();
+  if(!sql){$('pOut').innerHTML='<div class="warnbox">Write your query first, then press Check answer.</div>';return;}
+  let userRes;
+  try{userRes=runSQL(sql,2000,4000);}
+  catch(e){$('pOut').innerHTML=e.qlimit?limitMsg():`<div class="errbox">${esc(mysqlError(e.message,sql))}</div>`;return;}
+  if(userRes.length && userRes[0].truncated){
+    $('pOut').innerHTML='<div class="errbox">Your query returned over 2,000 rows, far more than this question expects - that usually means a join is multiplying rows. Check your join keys, then run again.</div>'+renderResult(userRes,50);
+    return;
+  }
+  const solRes=runSQL(q.sol,2000,4000);
+  const match=normalize(userRes,q.order)===normalize(solRes,q.order);
+  let verdict;
+  if(match){solved.add(currentQ);saveState(true);verdict='<div class="okbox">Correct. Your result matches the expected output' + (q.order?' including row order.':' (row order not required).') + '</div>';}
+  else if(q.tolerant && normalize(userRes,false)===normalize(solRes,false)){solved.add(currentQ);saveState(true);verdict='<div class="okbox">Correct (tie-breaking order differs, which is accepted here).</div>';}
+  else{verdict='<div class="errbox">Not a match yet. Compare your output below with what the question asks: check the columns returned, the filters, and whether NULL rows and edge cases are handled. Use the Hint if you are stuck.</div>';}
+  $('pOut').innerHTML=verdict+renderResult(userRes,200);
+  buildList();
+};
+$('pHint').onclick=()=>$('hintBox').classList.toggle('show');
+$('pSol').onclick=()=>$('solBox').classList.toggle('show');
+$('copySol').onclick=async()=>{
+  const text=$('solPre').textContent;
+  let ok=false;
+  try{ await navigator.clipboard.writeText(text); ok=true; }
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+    }catch(e2){ ok=false; }
+  }
+  const btn=$('copySol'), txt=$('copySolTxt');
+  txt.textContent = ok ? 'Copied!' : 'Copy failed';
+  btn.classList.toggle('copied', ok);
+  setTimeout(()=>{ txt.textContent='Copy'; btn.classList.remove('copied'); }, 1400);
+};
+$('pClear').onclick=()=>{$('pEditor').value='';$('pOut').innerHTML='';delete answers[currentQ];saveState();};
+$('pEditor').addEventListener('input',()=>{answers[currentQ]=$('pEditor').value;saveState();});
+$('sClear').onclick=()=>{$('sEditor').value='';$('sOut').innerHTML='';};
+document.querySelectorAll('[data-chip]').forEach(b=>b.onclick=()=>{$('sEditor').value=b.dataset.chip;doRun('sEditor','sOut');});
+
+/* keyboard */
+[['pEditor','pRun'],['sEditor','sRun']].forEach(([ed,btn])=>{
+  $(ed).addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();$(btn).click();}
+    if(e.key==='Tab'){e.preventDefault();const t=e.target,s=t.selectionStart;
+      t.value=t.value.slice(0,s)+'  '+t.value.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+2;}
+  });
+});
+
+document.addEventListener('input',e=>{ if(e.target && e.target.id==='qSearch') applyQFilter(); });
+
+/* ---------- database tab ---------- */
+const TABLES=['customers','accounts','transactions','payments','clicks','applications','employees','departments','products','orders','order_items','salary_history','logins','bookings','employees_archive'];
+function buildDbList(){
+  const el=$('tblList');el.innerHTML='';
+  TABLES.forEach(t=>{
+    const n=db.exec(`SELECT COUNT(*) FROM ${t}`)[0].values[0][0];
+    el.insertAdjacentHTML('beforeend',`<button data-t="${t}">${t}<span class="cnt">${n} rows</span></button>`);
+  });
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>showTable(b.dataset.t));
+}
+function showTable(t){
+  $('tblList').querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.t===t));
+  $('dbTitle').textContent=t;
+  const info=db.exec(`PRAGMA table_info(${t})`)[0].values;
+  $('dbSchema').innerHTML=info.map(c=>`<span class="schema-pill"><b>${c[1]}</b> ${String(c[2]||'').toLowerCase()||'text'}${c[5]?' PK':''}</span>`).join('');
+  const res=runSQL(`SELECT * FROM ${t}`, 1000, 4000);
+  $('dbCount').textContent=`${res[0].values.length} rows`;
+  $('dbRows').outerHTML=renderResult(res).replace('class="mysql-line"','class="mysql-line" style="display:none"');
+  document.querySelector('#tab-database .tblwrap').id='dbRows';
+}
+
+/* ---------- cheat sheet ---------- */
+const CHEATS=[
+ ['Execution order','WHERE cannot see aggregates because it runs before GROUP BY; HAVING runs after.',
+`FROM -> JOIN -> WHERE -> GROUP BY
+-> HAVING -> SELECT -> ORDER BY -> LIMIT`],
+ ['The anti-join','The most-asked join question: rows with no match.',
+`SELECT c.name
+FROM customers c
+LEFT JOIN accounts a
+  ON a.customer_id = c.customer_id
+WHERE a.account_id IS NULL;`],
+ ['Conditional aggregation','Answers any "share of" or "A vs B per group" question in one pass.',
+`SUM(CASE WHEN method = 'cash'
+     THEN amount ELSE 0 END)
+-- percent version:
+100.0 * SUM(CASE WHEN ok THEN 1
+        ELSE 0 END) / COUNT(*)`],
+ ['WHERE vs HAVING','Rows vs groups. Aggregate condition = HAVING.',
+`WHERE  amount > 100        -- rows
+GROUP BY customer_id
+HAVING SUM(amount) > 5000;  -- groups`],
+ ['Top-N per group','Window function in a subquery; filter outside.',
+`SELECT * FROM (
+ SELECT t.*, ROW_NUMBER() OVER (
+  PARTITION BY account_id
+  ORDER BY amount DESC) rn
+ FROM transactions t) x
+WHERE rn = 1;`],
+ ['Dates (MySQL)','BETWEEN is fine for DATE; for DATETIME use >= and <.',
+`YEAR(d), MONTH(d)
+DATE_FORMAT(d, '%Y-%m')
+DATEDIFF(d1, d2)
+DATE_ADD(d, INTERVAL 1 DAY)
+d >= '2026-03-01'
+AND d < '2026-04-01'`],
+ ['NULL rules','NULL never equals anything, including NULL.',
+`WHERE x IS NULL / IS NOT NULL
+COALESCE(x, 0)
+COUNT(*) counts NULLs,
+COUNT(col) does not`],
+ ['Duplicates','Group by the natural key.',
+`SELECT account_id, transaction_date,
+       amount, COUNT(*) AS n
+FROM transactions
+GROUP BY account_id,
+         transaction_date, amount
+HAVING COUNT(*) > 1;`],
+ ['Nth highest, three ways','Any one is accepted; know two.',
+`-- 1
+SELECT MAX(x) FROM t
+WHERE x < (SELECT MAX(x) FROM t);
+-- 2
+SELECT DISTINCT x FROM t
+ORDER BY x DESC LIMIT 1 OFFSET 1;
+-- 3: DENSE_RANK() = 2`],
+ ['Running totals and change','Window frames over ordered rows.',
+`SUM(amount) OVER (ORDER BY d)
+LAG(amount)  OVER (ORDER BY d)
+amount - LAG(amount)
+         OVER (ORDER BY d)`],
+ ['Rolling two-day window','The reported T3 pattern: daily CTE + self-join.',
+`WITH daily AS (SELECT customer_id,
+ payment_date, SUM(amount) c
+ FROM payments WHERE method='cash'
+ GROUP BY 1,2)
+SELECT DISTINCT d1.customer_id
+FROM daily d1 JOIN daily d2
+ ON d2.customer_id=d1.customer_id
+AND d2.payment_date IN (d1.payment_date,
+ DATE_ADD(d1.payment_date, INTERVAL 1 DAY))
+GROUP BY d1.customer_id, d1.payment_date
+HAVING SUM(d2.c) > 10000;`],
+ ['Interview delivery','Narrate before typing.',
+`1. Name the tables + join keys
+2. State the filter
+3. State the grouping
+4. Write FROM/JOIN first,
+   SELECT list last
+5. Dry-run 2 rows out loud,
+   including one edge case`]
+];
+function buildCheat(){
+  $('cheatGrid').innerHTML=CHEATS.map(([h,p,c])=>`<div class="card cheat"><h3>${h}</h3><p>${p}</p><pre>${esc(c)}</pre></div>`).join('');
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.id==='tab-'+b.dataset.tab));
+});
+
+/* ---------- boot ---------- */
+initSqlJs({locateFile:f=>`https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`}).then(async SQL=>{
+  seedDatabase(SQL);
+  await loadState();
+  $('loading').style.display='none';
+  document.getElementById('tab-practice').classList.add('active');
+  buildList();
+  const firstUnsolved=QUESTIONS.findIndex((q,i)=>!solved.has(i));
+  selectQ(firstUnsolved===-1?0:firstUnsolved);
+  buildDbList();showTable('customers');buildCheat();
+  const f=document.querySelector('footer .wrap');
+  if(f){
+    if(store.mode==='memory') f.insertAdjacentHTML('beforeend',' <b>Note:</b> no storage is available in this environment, so progress lasts for this session only.');
+    else if(store.mode==='local') f.insertAdjacentHTML('beforeend',' <b>Note:</b> progress is saved in this browser on this device.');
+  }
+}).catch(e=>{
+  $('loading').textContent='Could not load the SQL engine (network issue). Refresh to retry.';
+});
+</script>
+</body>
+</html>
